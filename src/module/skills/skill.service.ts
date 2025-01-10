@@ -13,13 +13,14 @@ export class SkillService implements ISkillService {
     @inject(TYPES.SkillRepository) private skillrepo!: ISkillRepository;
 
     async skilExist(name: string): Promise<boolean> {
-        return !!await this.skillrepo.findOne({name: { $regex: name, $options: "i" }})
+        return !!await this.skillrepo.findOne({name: { $regex:  `^${name}$`, $options: "i" }})
     }
 
     async createSkill(data: CreateSkillDTO): Promise<SkillDTO> {
         if(await this.skilExist(data.name)){
             throw new BadRequestError("Skill already exist");
         }
+        data.name = this.capitalizeName(data.name);
         const skill = await this.skillrepo.create(data);
         return skill;
     }
@@ -29,7 +30,8 @@ export class SkillService implements ISkillService {
             throw new BadRequestError("Invalid id");
         }
         if(data.name){
-            if(await this.skillrepo.findOne({_id: {$ne: data.id}, name: { $regex: data.name, $options: "i" }})){
+            data.name = this.capitalizeName(data.name);
+            if(await this.skillrepo.findOne({_id: {$ne: data.id}, name: { $regex:  `^${data.name}$`, $options: "i" }})){
                 throw new BadRequestError("Skill already exist");
             }
         }
@@ -48,6 +50,12 @@ export class SkillService implements ISkillService {
         return skills
     }
 
+    async getSkillFromName(query: string): Promise<SkillDTO | null> {
+        query = querySanitizer(query);
+        const skill = await this.skillrepo.findOne({name: { $regex: `^${query}$`, $options: "i" }});
+        return skill;
+    }
+
     async getSkillById(id: string): Promise<SkillDTO> {
         if(!isValidObjectId(id)){
             throw new BadRequestError("Invalid id");
@@ -58,6 +66,22 @@ export class SkillService implements ISkillService {
         }
 
         return skill;
+    }
+
+    async getSkillsFromIds(ids: string[]): Promise<SkillDTO[]> {
+        const skills = await this.skillrepo.findAll({ _id: { $in: ids } });
+        return skills.map(skill => this.handleSkillData(skill));
+    }
+
+    async serachSkill(query: string, isActive?:boolean): Promise<SkillDTO[]> {
+        const filter: FilterQuery<ISkill> = {};
+        query = querySanitizer(query);
+        filter.name = { $regex: query, $options: "i" }; 
+        if (isActive) {
+            filter.isActive = isActive;
+        }
+        const skills = await this.skillrepo.findAll(filter);
+        return skills;
     }
 
     async deactivateSkill(id: string): Promise<SkillDTO> {
@@ -72,5 +96,23 @@ export class SkillService implements ISkillService {
         skill.isActive = true;
         await this.skillrepo.update(id, skill);
         return skill;
+    }
+
+    private handleSkillData(skill: ISkill): SkillDTO {
+        return {
+            id: skill.id,
+            name: skill.name,
+            isActive: skill.isActive,
+            createdAt: skill.createdAt,
+            updatedAt: skill.updatedAt
+        }
+    }
+
+    private capitalizeName(name: string): string {
+        return name
+            .toLowerCase()
+            .split(" ")
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
     }
 }

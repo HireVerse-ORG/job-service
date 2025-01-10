@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import asyncWrapper from '@hireverse/service-common/dist/utils/asyncWrapper';
 import { AuthRequest } from '@hireverse/service-common/dist/token/user/userRequest';
 import { inject, injectable } from 'inversify';
-import TYPES from "../../core/container/container.types";
-import { ISkillService } from './interface/skill.service.interface';
+import TYPES from "../../../core/container/container.types";
+import { ISkillService } from '../interface/skill.service.interface';
 
 @injectable()
 export class SkillController {
@@ -11,7 +11,7 @@ export class SkillController {
 
   /**
 * @route GET /jobs/skills/list?page=1&limit=10&query=''
-* @scope Public
+* @scope Admin
 **/
   public listSkills = asyncWrapper(async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
@@ -19,6 +19,15 @@ export class SkillController {
     const query = req.query.query as string || '';
 
     const data = await this.skillService.getAllSkills(page, limit, query);
+    return res.json(data);
+  });
+  /**
+* @route GET /jobs/skills/search?query=''
+* @scope Public
+**/
+  public searchSkills = asyncWrapper(async (req: Request, res: Response) => {
+    const query = req.query.query as string || '';
+    const data = await this.skillService.serachSkill(query, true);
     return res.json(data);
   });
   /**

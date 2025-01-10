@@ -4,6 +4,7 @@
  */
 export default  {
     SkillController: Symbol('SkillController'),
+    SkillGrpcController: Symbol('SkillGrpcController'),
     SkillService: Symbol('SkillService'),
     SkillRepository: Symbol('SkillRepository'),
 };

@@ -1,16 +1,17 @@
 import { Router } from "express";
 import TYPES from "../../core/container/container.types";
-import {allowedRoles} from "@hireverse/service-common/dist/token/user/userMiddleware";
+import {allowedRoles, isAuthenticated} from "@hireverse/service-common/dist/token/user/userMiddleware";
 import { container } from "../../core/container";
-import { SkillController } from "./skill.controller";
+import { SkillController } from "./controllers/skill.controller";
 
 const skillController = container.get<SkillController>(TYPES.SkillController)
 
 const router = Router();
 
-router.get("/skills/list", skillController.listSkills);
+router.get("/skills/search", skillController.searchSkills);
+router.get("/skills/list",allowedRoles('admin'),skillController.listSkills);
 
-router.post("/skills", allowedRoles('admin'), skillController.createSkill);
+router.post("/skills", isAuthenticated, skillController.createSkill);
 router.put("/skills", allowedRoles('admin'), skillController.updateSkill);
 router.delete("/skills/:id", allowedRoles('admin'), skillController.deactivateSkill);
 router.put("/skills/:id", allowedRoles('admin'), skillController.restoreSkill);
