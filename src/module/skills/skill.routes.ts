@@ -6,6 +6,7 @@ import { SkillController } from "./controllers/skill.controller";
 
 const skillController = container.get<SkillController>(TYPES.SkillController)
 
+//baseurl: /api/jobs
 const router = Router();
 
 router.get("/skills/search", skillController.searchSkills);

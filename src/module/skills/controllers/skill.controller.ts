@@ -69,5 +69,5 @@ export class SkillController {
     const skill = await this.skillService.restoreSkill(id);
     return res.status(200).json({ message: "Skill restored", skill });
   });
-  
+
 }

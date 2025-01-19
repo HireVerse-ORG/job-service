@@ -3,8 +3,14 @@
  * We use symbols as identifiers but you can also use classes and or string literals.
  */
 export default  {
+    // skill
     SkillController: Symbol('SkillController'),
     SkillGrpcController: Symbol('SkillGrpcController'),
     SkillService: Symbol('SkillService'),
     SkillRepository: Symbol('SkillRepository'),
+    // jobcategory
+    JobCategoryController: Symbol('JobCategoryController'),
+    JobCategoryGrpcController: Symbol('JobCategoryGrpcController'),
+    JobCategoryService: Symbol('JobCategoryService'),
+    JobCategoryRepository: Symbol('JobCategoryRepository'),
 };
