@@ -38,7 +38,7 @@ export class JobCategoryController {
   public createJobCategory = asyncWrapper(async (req: AuthRequest, res: Response) => {
     const { name, isActive } = req.body;
     const JobCategory = await this.JobCategoryService.createJobCategory({ name, isActive });
-    return res.status(201).json({ message: "JobCategory created", JobCategory });
+    return res.status(201).json({ message: "Job Category created", JobCategory });
   });
 
   /**
@@ -48,7 +48,7 @@ export class JobCategoryController {
   public updateJobCategory = asyncWrapper(async (req: AuthRequest, res: Response) => {
     const { id, name, isActive } = req.body;
     const JobCategory = await this.JobCategoryService.updateJobCategory({ id, name, isActive });
-    return res.status(200).json({ message: "JobCategory updated", JobCategory });
+    return res.status(200).json({ message: "Job Category updated", JobCategory });
   });
 
   /**
@@ -58,7 +58,7 @@ export class JobCategoryController {
   public deactivateJobCategory = asyncWrapper(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const JobCategory = await this.JobCategoryService.deactivateJobCategory(id);
-    return res.status(200).json({ message: "JobCategory deactivated", JobCategory });
+    return res.status(200).json({ message: "Job Category deactivated", JobCategory });
   });
 
   /**
@@ -68,7 +68,7 @@ export class JobCategoryController {
   public restoreJobCategory = asyncWrapper(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const JobCategory = await this.JobCategoryService.restoreJobCategory(id);
-    return res.status(200).json({ message: "JobCategory restored", JobCategory });
+    return res.status(200).json({ message: "Job Category restored", JobCategory });
   });
 
 }
