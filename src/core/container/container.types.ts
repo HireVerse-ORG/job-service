@@ -13,6 +13,11 @@ export default  {
     JobCategoryGrpcController: Symbol('JobCategoryGrpcController'),
     JobCategoryService: Symbol('JobCategoryService'),
     JobCategoryRepository: Symbol('JobCategoryRepository'),
+    // job
+    JobController: Symbol('JobController'),
+    JobGrpcController: Symbol('JobGrpcController'),
+    JobService: Symbol('JobService'),
+    JobRepository: Symbol('JobRepository'),
     
     // kafka
     KafkaProducer: Symbol('KafkaProducer'),
