@@ -25,15 +25,15 @@ class Server {
 
     start(PORT: string) {
         this.server = this.app.listen(PORT, () => {
-            logger.info(`User server running at PORT:${PORT}`);
+            logger.info(`Job server running at PORT:${PORT}`);
         });
     }
 
     stop() {
-        logger.info("Shutting down User Server...");
+        logger.info("Shutting down Job Server...");
         try {
             this.server?.close(() => {
-                logger.info("User Server shut down gracefully.");
+                logger.info("Job Server shut down gracefully.");
             });
 
             process.exit(0);

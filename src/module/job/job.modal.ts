@@ -1,9 +1,10 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export enum JobStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  DRAFT = 'draft',
+  PENDING = 'pending',
+  FAILED = 'failed',
+  LIVE = 'live',
+  CLOSED = 'closed',
 }
 
 export interface IJob extends Document {
@@ -20,6 +21,7 @@ export interface IJob extends Document {
   niceToHaves: string;
   companyProfileId: string;
   userId: string;
+  failedReson: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,7 +53,7 @@ const JobSchema: Schema = new Schema(
     status: {
       type: String,
       enum: Object.values(JobStatus),
-      default: JobStatus.ACTIVE,
+      default: JobStatus.PENDING,
     },
     description: {
       type: String,
@@ -73,6 +75,14 @@ const JobSchema: Schema = new Schema(
     userId: {
       type: String,
       required: true,
+    },
+    isClosed: {
+      type: Boolean,
+      default: false
+    },
+    failedReson: {
+      type: String,
+      default: null
     },
   },
   {

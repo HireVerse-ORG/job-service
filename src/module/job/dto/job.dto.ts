@@ -1,5 +1,7 @@
 import { IPaginationResponse } from "@hireverse/service-common/dist/repository";
-import { JobStatus } from "../job.modal";
+import { IJob, JobStatus } from "../job.modal";
+import { ISkill } from "../../skills/skill.modal";
+import { IJobCategory } from "../../category/category.modal";
 
 export interface CreateJobDTO {
     title: string;
@@ -7,7 +9,6 @@ export interface CreateJobDTO {
     salaryRange: number[] | null;
     categories: string[];
     skills: string[];
-    status: JobStatus;
     description: string;
     responsibilities?: string;
     whoYouAre?: string;
@@ -22,7 +23,6 @@ export interface UpdateJobDTO {
     salaryRange?: number[] | null;
     categories?: string[];
     skills?: string[];
-    status?: JobStatus;
     description?: string;
     responsibilities?: string;
     whoYouAre?: string;
@@ -43,11 +43,34 @@ export interface JobDTO {
     niceToHaves: string;
     companyProfileId: string;
     userId: string;
+    failedReson: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface PopulatedJobDTO {
+    id: string;
+    title: string;
+    employmentTypes: string[];
+    salaryRange: number[] | null;
+    categories: IJobCategory[];
+    skills: ISkill[];
+    status: JobStatus;
+    description: string;
+    responsibilities: string;
+    whoYouAre: string;
+    niceToHaves: string;
+    companyProfileId: string;
+    userId: string;
+    failedReson: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
 
 export interface JobListDTO extends IPaginationResponse<JobDTO> {
+}
+
+export interface PopulatedJobListDTO extends IPaginationResponse<PopulatedJobDTO> {
 }
 
 

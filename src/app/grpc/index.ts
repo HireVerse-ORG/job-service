@@ -17,10 +17,10 @@ class Server {
     start(PORT:string) {
         this.app.bindAsync(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure(), (error, port) => {
             if(error){
-                logger.error(`Error starting Prodile gRPC server: ${error}`);
+                logger.error(`Error starting Job gRPC server: ${error}`);
                 process.exit(1);
             }
-            logger.info(`Prodile gRPC service running at 0.0.0.0:${port}`);
+            logger.info(`Job gRPC service running at 0.0.0.0:${port}`);
         });
     }
 
