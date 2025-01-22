@@ -73,6 +73,15 @@ export interface JobListDTO extends IPaginationResponse<JobDTO> {
 export interface PopulatedJobListDTO extends IPaginationResponse<PopulatedJobDTO> {
 }
 
+export interface JobSearchDTO {
+    keyword?: string;
+    categories?: string[];
+    employmentTypes?: string[];
+    salaryRange?: {min: number, max: number};
+    companyIds?: string[];
+    page: number;
+    limit: number;
+}
 
 
 

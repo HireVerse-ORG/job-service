@@ -5,7 +5,7 @@ import { querySanitizer } from "@hireverse/service-common/dist/utils";
 import { IJobService } from "./interface/job.service.interface";
 import { IJobRepository } from "./interface/job.repository.interface";
 import { EventService } from "../../event/event.service";
-import { CreateJobDTO, JobDTO, JobListDTO, PopulatedJobDTO, PopulatedJobListDTO, UpdateJobDTO } from "./dto/job.dto";
+import { CreateJobDTO, JobDTO, JobListDTO, JobSearchDTO, PopulatedJobDTO, PopulatedJobListDTO, UpdateJobDTO } from "./dto/job.dto";
 import { IJob, JobStatus } from "./job.modal";
 import { isValidObjectId } from "mongoose";
 import { ISkill } from "../skills/skill.modal";
@@ -76,10 +76,13 @@ export class JobService implements IJobService {
         return this.toDTO(updatedJob);
     }
 
-    async searchJobs(query: string): Promise<JobDTO[]> {
-        const sanitizedQuery = querySanitizer(query);
-        const jobs = await this.jobRepo.findAll({ title: { $regex: sanitizedQuery, $options: 'i' } });
-        return jobs.map(this.toDTO);
+    async getPaginatedActiveJobs(filter: JobSearchDTO): Promise<PopulatedJobListDTO> {
+        const sanitizedFilter = {...filter, 
+            keyword: querySanitizer(filter.keyword || ""),
+        };
+        const response = await this.jobRepo.searchActiveJobs(sanitizedFilter);
+        const jobs =  {...response, data: response.data.map(this.toPopulatedDTO)};
+        return jobs;
     }
 
     async getJobsByUser(userId: string): Promise<JobDTO[]> {
@@ -107,7 +110,7 @@ export class JobService implements IJobService {
     async listJobs(page: number, limit: number, filter: {userId?: string; companyProfileId?: string; id?: string;} = {}, query?: string): Promise<PopulatedJobListDTO> {
         const sanitizedQuery = querySanitizer(query || "");
         const filterQuery = {...filter, title: { $regex: sanitizedQuery, $options: 'i' }};
-        const response = await this.jobRepo.populatedPaginate(page, limit, filterQuery, {isActive: true}, {});
+        const response = await this.jobRepo.populatedPaginate(page, limit, filterQuery, {isActive: true}, {}, {sort: {createdAt: -1}});
         const jobs =  {...response, data: response.data.map(this.toPopulatedDTO)};
         return jobs;
     }

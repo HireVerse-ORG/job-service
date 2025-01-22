@@ -18,6 +18,9 @@ export default  {
     JobGrpcController: Symbol('JobGrpcController'),
     JobService: Symbol('JobService'),
     JobRepository: Symbol('JobRepository'),
+
+    // external
+    ProfileService: Symbol('ProfileService'),
     
     // kafka
     KafkaProducer: Symbol('KafkaProducer'),

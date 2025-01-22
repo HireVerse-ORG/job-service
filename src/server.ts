@@ -9,7 +9,7 @@ import Database from './core/database';
 import { startEventService, stopEventService } from './event';
 
 (async () => {
-    checkEnvVariables('DATABASE_URL', 'JWT_SECRET_KEY', 'KAFKA_SERVER');
+    checkEnvVariables('DATABASE_URL', 'JWT_SECRET_KEY', 'KAFKA_SERVER', 'PROFILE_SERVICE_URL');
     const databaseUrl = process.env.DATABASE_URL!;
     const expressPort = process.env.EXPRESS_PORT || '5003';
     const grpcPort = process.env.GRPC_PORT || '6003';
