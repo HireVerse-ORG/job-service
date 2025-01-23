@@ -22,4 +22,5 @@ export interface IJobRepository extends IMongoRepository<IJob> {
     ): Promise<IJob[]>
 
     searchActiveJobs(searchFilter: JobSearchDTO): Promise<IPaginationResponse<IJob>>;
+    getCategoriesForKeyword(keyword: string): Promise<string[]>
 }

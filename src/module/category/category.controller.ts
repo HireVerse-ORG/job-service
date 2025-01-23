@@ -19,6 +19,17 @@ export class JobCategoryController {
     return res.json(data);
   });
   /**
+  * @route GET /jobs/category/public
+  * @scope Public
+  **/
+  public publicJobCategorys = asyncWrapper(async (req: Request, res: Response) => {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const data = await this.JobCategoryService.getAllJobCategorys(page, limit, {isActive: true});
+    return res.json(data);
+  });
+  /**
   * @route GET /jobs/category/list?page=1&limit=10&query=''
   * @scope Admin
   **/
@@ -27,7 +38,7 @@ export class JobCategoryController {
     const limit = Number(req.query.limit) || 10;
     const query = req.query.query as string || '';
 
-    const data = await this.JobCategoryService.getAllJobCategorys(page, limit, query);
+    const data = await this.JobCategoryService.getAllJobCategorys(page, limit, {query});
     return res.json(data);
   });
 

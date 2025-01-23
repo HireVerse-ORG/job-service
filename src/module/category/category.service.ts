@@ -39,14 +39,18 @@ export class JobCategoryService implements IJobCategoryService {
         return JobCategory
     }
 
-    async getAllJobCategorys(page: number, limit: number, query?: string): Promise<JobCategoryListDTO> {
-        const filter: FilterQuery<IJobCategory> = {};
-        if (query) {
-            query = querySanitizer(query);
-            filter.name = { $regex: query, $options: "i" }; 
+    async getAllJobCategorys(page: number, limit: number, filter?: {query?: string, isActive?: boolean}): Promise<JobCategoryListDTO> {
+        const Queryfilter: FilterQuery<IJobCategory> = {};
+        if (filter?.query) {
+            const query = querySanitizer(filter.query);
+            Queryfilter.name = { $regex: query, $options: "i" }; 
         }
 
-        const JobCategorys = await this.JobCategoryrepo.paginate(filter, page, limit, {sort: {createdAt: -1}});
+        if(filter?.isActive) {
+            Queryfilter.isActive = filter.isActive
+        }
+
+        const JobCategorys = await this.JobCategoryrepo.paginate(Queryfilter, page, limit, {sort: {createdAt: -1}});
         return JobCategorys
     }
 

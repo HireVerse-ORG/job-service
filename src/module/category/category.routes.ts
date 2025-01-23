@@ -10,6 +10,7 @@ const categoryController = container.get<JobCategoryController>(TYPES.JobCategor
 const router = Router();
 
 router.get("/category/search", categoryController.searchJobCategorys);
+router.get("/category/public", categoryController.publicJobCategorys);
 router.get("/category/list",allowedRoles('admin'),categoryController.listJobCategorys);
 
 router.post("/category", isAuthenticated, categoryController.createJobCategory);

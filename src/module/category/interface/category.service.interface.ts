@@ -3,7 +3,7 @@ import { CreateJobCategoryDTO, JobCategoryDTO, JobCategoryListDTO, UpdateJobCate
 export interface IJobCategoryService {
     skilExist(name: string): Promise<boolean>
     createJobCategory(data: CreateJobCategoryDTO): Promise<JobCategoryDTO>;
-    getAllJobCategorys(page: number, limit: number, query?: string): Promise<JobCategoryListDTO>;
+    getAllJobCategorys(page: number, limit: number, filter?: {query?: string, isActive?: boolean}): Promise<JobCategoryListDTO>;
     getJobCategoryFromName(id: string): Promise<JobCategoryDTO | null>;
     getJobCategoryById(id: string): Promise<JobCategoryDTO>;
     getJobCategorysFromIds(ids: string[]): Promise<JobCategoryDTO[]>;

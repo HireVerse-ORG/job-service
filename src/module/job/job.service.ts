@@ -115,6 +115,11 @@ export class JobService implements IJobService {
         return jobs;
     }
 
+    async listJobsCategoryByKeyword(keyword: string): Promise<string[]> {
+        const categories = await this.jobRepo.getCategoriesForKeyword(keyword);
+        return categories;
+    }
+
     private toDTO(job: IJob): JobDTO {
         return {
             id: job.id,

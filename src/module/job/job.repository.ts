@@ -2,7 +2,7 @@ import { IPaginationResponse, MongoBaseRepository } from "@hireverse/service-com
 import { injectable } from "inversify";
 import Job, { IJob, JobStatus } from "./job.modal";
 import { IJobRepository } from "./interface/job.repository.interface";
-import { FilterQuery, PipelineStage, QueryOptions } from "mongoose";
+import { FilterQuery, PipelineStage, QueryOptions, Types } from "mongoose";
 import { ISkill } from "../skills/skill.modal";
 import { IJobCategory } from "../category/category.modal";
 import { InternalError } from "@hireverse/service-common/dist/app.errors";
@@ -79,18 +79,60 @@ export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepo
         }
     }
 
+    async getCategoriesForKeyword(keyword: string): Promise<string[]> {
+        const pipeline: PipelineStage[] = [
+            {
+                $match: {
+                    $or: [
+                        { title: { $regex: keyword, $options: "i" } },
+                        { description: { $regex: keyword, $options: "i" } },
+                    ],
+                    status: JobStatus.LIVE,
+                },
+            },
+            {
+                $lookup: {
+                    from: "jobcategories",
+                    localField: "categories",
+                    foreignField: "_id",
+                    as: "categoriesInfo",
+                },
+            },
+            {
+                $unwind: "$categoriesInfo",
+            },
+            {
+                $group: {
+                    _id: "$categoriesInfo.name",
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    name: "$_id",
+                },
+            },
+        ];
+
+        try {
+            const result = await this.repository.aggregate(pipeline).exec();
+            return result.map((category) => category.name);
+        } catch (error) {
+            throw new InternalError("Failed to fetch job categories");
+        }
+    }
 
     async searchActiveJobs(searchFilter: JobSearchDTO): Promise<IPaginationResponse<IJob>> {
         const { keyword, categories, employmentTypes, salaryRange, companyIds, page, limit } = searchFilter;
-    
+
         const pipeline: PipelineStage[] = this.getActiveJobSearchPipeline(keyword, categories, employmentTypes, salaryRange, companyIds, page, limit);
         const countPipeline: PipelineStage[] = this.getActiveJobSearchCountPipeline(keyword, categories, employmentTypes, salaryRange, companyIds);
-    
+
         try {
             const jobs = await this.repository.aggregate(pipeline).exec();
             const countResult = await this.repository.aggregate(countPipeline).exec();
             const count = countResult[0]?.total || 0;
-    
+
             return {
                 currentPage: page,
                 data: jobs,
@@ -104,7 +146,7 @@ export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepo
             throw new InternalError("Failed to fetch search results");
         }
     }
-    
+
     private getActiveJobSearchPipeline(
         keyword: string | undefined,
         categories: string[] | undefined,
@@ -183,11 +225,11 @@ export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepo
                 },
             },
         ];
-    
+
         return pipeline;
     }
-    
-    
+
+
     private getActiveJobSearchCountPipeline(
         keyword: string | undefined,
         categories: string[] | undefined,
@@ -201,10 +243,10 @@ export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepo
                 $count: "total",
             },
         ];
-    
+
         return pipeline;
     }
-    
+
     private getActiveJobPipeline(
         keyword: string | undefined,
         categories: string[] | undefined,
@@ -231,37 +273,47 @@ export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepo
                     as: "skillsInfo",
                 },
             },
-            // Stage 3: Match jobs by title, category name, skill name, and company IDs (if provided)
+            // Stage 3: Match jobs by title, category IDs, skill name, and company IDs (if provided)
             {
                 $match: {
                     $and: [
-                        { status: JobStatus.LIVE }, 
+                        { status: JobStatus.LIVE },
                         ...(companyIds && companyIds.length > 0 ? [{ companyProfileId: { $in: companyIds } }] : []),
                         {
                             $or: [
-                                { title: { $regex: keyword, $options: "i" } }, 
-                                { "categoriesInfo.name": { $regex: keyword, $options: "i" } }, 
-                                { "skillsInfo.name": { $regex: keyword, $options: "i" } }, 
+                                { title: { $regex: keyword, $options: "i" } },
+                                { "categoriesInfo.name": { $regex: keyword, $options: "i" } },
+                                { "skillsInfo.name": { $regex: keyword, $options: "i" } },
                             ]
                         },
-                        ...(categories && categories.length > 0 ? [{ categories: { $in: categories } }] : []), 
-                        ...(employmentTypes && employmentTypes.length > 0 ? [{ employmentTypes: { $in: employmentTypes } }] : []), 
+                        ...(categories && categories.length > 0
+                            ? [
+                                {
+                                    "categoriesInfo.name": {
+                                        $in: categories,
+                                    },
+                                },
+                            ]
+                            : []),
+                        ...(employmentTypes && employmentTypes.length > 0
+                            ? [{ employmentTypes: { $in: employmentTypes } }]
+                            : []),
                         ...(salaryRange
                             ? [
                                 {
                                     $expr: {
                                         $and: [
-                                            { $gte: [{ $arrayElemAt: ["$salaryRange", 0] }, salaryRange.min] }, 
-                                            { $lte: [{ $arrayElemAt: ["$salaryRange", 1] }, salaryRange.max] }, 
+                                            { $lte: [{ $arrayElemAt: ["$salaryRange", 0] }, salaryRange.max] },
+                                            { $gte: [{ $arrayElemAt: ["$salaryRange", 1] }, salaryRange.min] }, 
                                         ],
                                     },
                                 },
                             ]
-                            : []),                        
+                            : []),
                     ]
                 }
-            },            
+            },
         ];
     }
-    
+
 }

@@ -21,4 +21,18 @@ export class ProfileService implements IProfileService {
             })
         })
     }
+
+    async getCompanyProfilesByidList(ids: string[]): Promise<RPCServiceResponseDto> {
+        return new Promise((resolve, reject) => {
+            companyProfileClient.GetCompanyProfilesByIdList({ ids }, (error: any | null, response: any) => {
+                if (error) {
+                    const status = mapGrpcErrorToHttpStatus(error);
+                    const message = error.details;
+                    return reject({ status, message, response });
+                }
+
+                return resolve({ status: 200, message: "Profiles Feteched", response });
+            })
+        })
+    }
 }

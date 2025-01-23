@@ -4,7 +4,7 @@ import { IJobService } from './interface/job.service.interface';
 import asyncWrapper from '@hireverse/service-common/dist/utils/asyncWrapper';
 import { AuthRequest } from '@hireverse/service-common/dist/token/user/userRequest';
 import { Response } from 'express';
-import { CreateJobDTO, JobSearchDTO, UpdateJobDTO } from './dto/job.dto';
+import { CreateJobDTO, JobSearchDTO, PopulatedJobDTO, UpdateJobDTO } from './dto/job.dto';
 import { JobStatus } from './job.modal';
 import { IProfileService } from '../external/profile/profile.service.interface';
 
@@ -63,104 +63,114 @@ export class JobController {
     return res.json(jobs)
   });
 
-/**
- * @route GET /api/jobs/search?keyword=""&location="&country="&city="&categories="&priceRange=&employmentType&page=1&limit=10
- * @scope Public
- **/
-public searchJobs = asyncWrapper(async (req: AuthRequest, res: Response) => {
-  const { 
-    keyword, 
-    location, 
-    country, 
-    city, 
-    categories, 
-    priceRange, 
-    employmentType 
-} = req.query as { 
-    keyword: string, 
-    location: string, 
-    country: string, 
-    city: string, 
-    categories: string, 
-    priceRange: string, 
-    employmentType: string 
-};
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
+  /**
+   * @route GET /api/jobs/keyword-categories?keyword=""
+   * @scope Public
+   **/
+  public listJobKeyWordCategories = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const keyWord = req.query.keyword?.toString() || "";
+    if(!keyWord){
+      return res.json([]);
+    }
+    const categories = await this.jobService.listJobsCategoryByKeyword(keyWord);
+    return res.json(categories)
+  });
 
-  const filter: JobSearchDTO = {page, limit};
-  if (keyword) filter.keyword = keyword;
-  if(categories) filter.categories = categories.split(",");
-  if(employmentType) filter.employmentTypes = employmentType.split(",");
-  if(priceRange) {
-      const [min, max] = priceRange.split("-");
-      filter.salaryRange = { min: parseInt(min), max: parseInt(max) };
-  }
+  /**
+   * @route GET /api/jobs/search?keyword=""&location="&country="&city="&categories="&salaryRange=&employmentType&page=1&limit=10
+   * @scope Public
+   **/
+  public searchJobs = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const {
+      keyword, location, country, city,
+      categories, salaryRange, employmentTypes
+    } = req.query as {
+      keyword: string, location: string, country: string, city: string, categories: string,
+      salaryRange: string, employmentTypes: string
+    };
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
 
-  if (!location && !country && !city) {
+    const filter: JobSearchDTO = { page, limit };
+    // Build filters
+    if (keyword) filter.keyword = keyword;
+    if (categories) filter.categories = categories.split(",");
+    if (employmentTypes) filter.employmentTypes = employmentTypes.split(",");
+    if (salaryRange) {
+      const [min, max] = salaryRange.split("-");
+      if (min && max && !isNaN(parseInt(min)) && !isNaN(parseInt(max))) {
+        filter.salaryRange = { min: parseInt(min), max: parseInt(max) };
+      }
+    }
+
+    let companies = [];
+
+    if (!location && !country && !city) {
       const jobs = await this.jobService.getPaginatedActiveJobs(filter);
-      const jobsWithProfiles = jobs.data.map((job) => ({
-        ...job,
-        companyProfile: null,
-      }));
+      const companyIds = jobs.data.map((job) => job.companyProfileId);
+      try {
+        const { response } = await this.profileService.getCompanyProfilesByidList(companyIds);
+        companies = response?.profiles || [];
+      } catch (error) {
+        companies = [];
+      }
+      const jobsWithProfiles = this.mapJobsWithProfiles(jobs.data, companies);
       return res.json({
         ...jobs,
         data: jobsWithProfiles,
       });
-  }
+    }
 
-  try {
-      const response = await this.profileService.getCompanyProfilesByLocation({ country, city }, location);
-      const companies = response.response?.profiles || [];
+    try {
+      const { response } = await this.profileService.getCompanyProfilesByLocation({ country, city }, location);
+      companies = response?.profiles || [];
 
       if (companies.length > 0) {
         filter.companyIds = companies.map((company: { id: string }) => company.id);
         const jobs = await this.jobService.getPaginatedActiveJobs(filter);
-  
-        const jobsWithProfiles = jobs.data.map((job) => {
-          const profile = companies.find((company: { id: string }) => company.id === job.companyProfileId);
-          return {
-            ...job,
-            companyProfile: profile
-              ? {
-                  id: profile.id,
-                  name: profile.name,
-                  companyId: profile.companyId,
-                  location: profile.location,
-                  image: profile.image,
-                }
-              : null,
-          };
-        });
-        
-  
+
+        const jobsWithProfiles = this.mapJobsWithProfiles(jobs.data, companies);
+
         return res.json({
           ...jobs,
           data: jobsWithProfiles,
         });
       }
+      return this.sendEmptyPaginationResponse(res);
+    } catch (error) {
+      return this.sendEmptyPaginationResponse(res);
+    }
+  });
 
-      return res.json({
-        currentPage: page,
-        limit: limit,
-        total: 0,
-        totalPages: 0,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        data: []
-      });  
-  } catch (error) {
-      return res.json({
-        currentPage: page,
-        limit: limit,
-        total: 0,
-        totalPages: 0,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        data: []
-      });   
+  private mapJobsWithProfiles(jobs: PopulatedJobDTO[], companies: any[]) {
+    return jobs.map((job) => {
+      const profile = companies.find((company) => company.id === job.companyProfileId);
+      return {
+        ...job,
+        companyProfile: profile
+          ? {
+            id: profile.id,
+            name: profile.name,
+            companyId: profile.companyId,
+            location: profile.location,
+            image: profile.image,
+          }
+          : null,
+      };
+    });
   }
-});
+
+  private sendEmptyPaginationResponse(res: Response) {
+    return res.json({
+      currentPage: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      data: []
+    });
+  }
 
 
   /**
