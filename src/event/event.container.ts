@@ -15,7 +15,7 @@ const kafkaConnect = new KafkaConnect({
 })
 
 export const jobProducer = new kafka.KafkaProducer(kafkaConnect, {allowAutoTopicCreation: process.env.NODE_ENV === "development"});
-export const jobConsumer = new kafka.KafkaConsumer(kafkaConnect, { groupId: "job-group"});
+export const jobConsumer = new kafka.KafkaConsumer(kafkaConnect, { groupId: "job-group", allowAutoTopicCreation: process.env.NODE_ENV === "development"});
 
 export function loadEventContainer(container: Container) {
     container.bind<KafkaProducer>(TYPES.KafkaProducer).toConstantValue(jobProducer);

@@ -7,7 +7,7 @@ import { IJobRepository } from "./interface/job.repository.interface";
 import { EventService } from "../../event/event.service";
 import { CreateJobDTO, JobDTO, JobListDTO, JobSearchDTO, PopulatedJobDTO, PopulatedJobListDTO, UpdateJobDTO } from "./dto/job.dto";
 import { IJob, JobStatus } from "./job.modal";
-import { isValidObjectId } from "mongoose";
+import { FilterQuery, isValidObjectId } from "mongoose";
 import { ISkill } from "../skills/skill.modal";
 import { IJobCategory } from "../category/category.modal";
 
@@ -95,16 +95,20 @@ export class JobService implements IJobService {
         return jobs.map(this.toDTO);
     }
 
-    async getJobById(id: string): Promise<JobDTO> {
+    async getJobById(id: string, status?: JobStatus): Promise<PopulatedJobDTO> {
         if(!isValidObjectId(id)){
             throw new BadRequestError("Invalid job id");
         }
+        const filter:FilterQuery<IJob> = {_id: id};
         
-        const job = await this.jobRepo.findById(id);
+        if(status){
+            filter.status = status;
+        }
+        const job = await this.jobRepo.populatedFindOne(filter);
         if (!job) {
             throw new NotFoundError("Job not found");
         }
-        return this.toDTO(job);
+        return this.toPopulatedDTO(job);
     }
 
     async listJobs(page: number, limit: number, filter: {userId?: string; companyProfileId?: string; id?: string;} = {}, query?: string): Promise<PopulatedJobListDTO> {

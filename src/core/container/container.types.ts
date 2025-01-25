@@ -19,6 +19,12 @@ export default  {
     JobService: Symbol('JobService'),
     JobRepository: Symbol('JobRepository'),
 
+    // job application
+    JobApplicationController: Symbol('JobApplicationController'),
+    JobApplicationGrpcController: Symbol('JobApplicationGrpcController'),
+    JobApplicationService: Symbol('JobApplicationService'),
+    JobApplicationRepository: Symbol('JobApplicationRepository'),
+
     // external
     ProfileService: Symbol('ProfileService'),
     

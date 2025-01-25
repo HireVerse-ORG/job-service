@@ -1,4 +1,4 @@
-import { CreateJobDTO, JobDTO, JobSearchDTO, PopulatedJobListDTO, UpdateJobDTO } from "../dto/job.dto";
+import { CreateJobDTO, JobDTO, JobSearchDTO, PopulatedJobDTO, PopulatedJobListDTO, UpdateJobDTO } from "../dto/job.dto";
 import { JobStatus } from "../job.modal";
 
 export interface IJobService {
@@ -9,7 +9,7 @@ export interface IJobService {
     getPaginatedActiveJobs(filter: JobSearchDTO): Promise<PopulatedJobListDTO>;
     getJobsByUser(userId: string): Promise<JobDTO[]>;
     getJobsByCompany(companyProfileId: string): Promise<JobDTO[]>;
-    getJobById(id: string): Promise<JobDTO>;
+    getJobById(id: string, status?: JobStatus): Promise<PopulatedJobDTO>;
     listJobs(page: number, limit: number, filter: {userId?: string; companyProfileId?: string; id?: string;}, query?:string): Promise<PopulatedJobListDTO>;
     listJobsCategoryByKeyword(keyword: string): Promise<string[]>;
-}
+} 

@@ -8,9 +8,9 @@ const eventController = container.get<EventController>(TYPES.EventController);
 
 export async function startEventService() {
     try {
+        await jobProducer.connect();
         await jobConsumer.connect();
         await eventController.initializeSubscriptions();
-        await jobProducer.connect();
         logger.info("Event service started successfully.");
     } catch (error) {
         logger.error("Error starting the event service:", error);
@@ -19,7 +19,7 @@ export async function startEventService() {
 
 export async function stopEventService() {
     try {
-        await jobProducer.connect();
+        await jobProducer.disconnect();
         await jobConsumer.disconnect();
         logger.info("Event service stopped successfully.");
     } catch (error) {

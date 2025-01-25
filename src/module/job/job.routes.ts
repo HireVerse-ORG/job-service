@@ -1,6 +1,6 @@
 import { Router } from "express";
 import TYPES from "../../core/container/container.types";
-import {allowedRoles, isAuthenticated} from "@hireverse/service-common/dist/token/user/userMiddleware";
+import {allowedRoles} from "@hireverse/service-common/dist/token/user/userMiddleware";
 import { container } from "../../core/container";
 import { JobController } from "./job.controller";
 
@@ -15,6 +15,7 @@ router.get('/search', controller.searchJobs);
 router.get('/keyword-categories', controller.listJobKeyWordCategories);
 router.post('/retry/:id', allowedRoles("company"), controller.retry);
 router.post('/close/:id', allowedRoles("company"), controller.closeJob);
+router.get('/:id', controller.getJob);
 router.put('/:id', allowedRoles("company"), controller.updateJob);
 
 export const jobRoutes = router;

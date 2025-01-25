@@ -37,6 +37,29 @@ export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepo
         }
     }
 
+    async populatedFindOne(filter: FilterQuery<IJob>,
+        skillFilter: FilterQuery<ISkill> = {},
+        categoryFilter: FilterQuery<IJobCategory> = {},
+        options?: QueryOptions<IJob>
+    ): Promise<IJob | null> {
+        try {
+            const jobs = await this.repository
+                .findOne(
+                    {
+                        ...filter,
+                    },
+                    null,
+                    options
+                )
+                .populate({ path: "skills", match: skillFilter })
+                .populate({ path: "categories", match: categoryFilter });
+
+            return jobs;
+        } catch (error) {
+            throw new InternalError("Failed to fetch job list");
+        }
+    }
+
     async populatedPaginate(
         page: number,
         limit: number,

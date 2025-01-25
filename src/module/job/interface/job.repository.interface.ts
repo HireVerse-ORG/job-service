@@ -21,6 +21,12 @@ export interface IJobRepository extends IMongoRepository<IJob> {
         options?: QueryOptions<IJob> 
     ): Promise<IJob[]>
 
+    populatedFindOne(filter: FilterQuery<IJob>, 
+        skillFilter?: FilterQuery<ISkill>, 
+        categoryFilter?: FilterQuery<IJobCategory>,
+        options?: QueryOptions<IJob> 
+    ): Promise<IJob | null>
+
     searchActiveJobs(searchFilter: JobSearchDTO): Promise<IPaginationResponse<IJob>>;
     getCategoriesForKeyword(keyword: string): Promise<string[]>
 }
