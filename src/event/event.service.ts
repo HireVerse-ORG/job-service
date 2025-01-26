@@ -12,8 +12,16 @@ export class EventService {
     try {
       const event = JobValidationRequestEvent({key: message.job_id, value: message});
       await this.producer.sendEvent(event);
-    } catch (error) {
-      logger.error("Failed to publish job validation event")
+    } catch (error: any) {
+      logger.error(
+        `Failed to publish job validation event for job ID: ${message.job_id}. Error: ${error.message || "Unknown error"}`,
+        {
+          context: "JobValidationRequestEvent",
+          jobId: message.job_id,
+          errorStack: error.stack || "No stack trace",
+        }
+      );
+
     }
   }
 
@@ -21,10 +29,15 @@ export class EventService {
     try {
       const event = JobAppliedEvent({key: message.job_application_id, value: message});
       await this.producer.sendEvent(event);
-    } catch (error) {
-      console.log(error);
-      
-      logger.error("Failed to publish job applied event")
+    } catch (error: any) {
+      logger.error(
+        `Failed to publish job applied event for application ID: ${message.job_application_id}. Error: ${error.message || "Unknown error"}`,
+        {
+          context: "JobAppliedEvent",
+          applicationId: message.job_application_id,
+          errorStack: error.stack || "No stack trace",
+        }
+      );
     }
   }
 }

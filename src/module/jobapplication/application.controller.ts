@@ -45,6 +45,16 @@ export class JobApplicationController {
   });
 
   /**
+* @route PUT /api/jobs/re-apply/:id
+* @scope Seeker
+**/
+  public withdrawApplication = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+    await this.jobApplicationService.withdrawJobApplication(id);
+    return res.json({ message: "Job application withdrawed successfully" });
+  });
+
+  /**
    * @route GET /api/jobs/my-applications?query=''&status=''&page=1&limit=10
    * @scope Seeker
    */
@@ -74,6 +84,35 @@ export class JobApplicationController {
       data: applicationsWithProfile,
     });
   });
+
+  /**
+ * @route GET /api/jobs/company/applicants?query=''&status=''&page=1&limit=10
+ * @scope Company
+ */
+  public listCompanyJobApplicants = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const jobId = req.query.jobId as string;
+    const companyProfileId = req.query.companyProfileId as string;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const query = req.query.query as string;
+    const status = req.query.status as JobApplicationStatus;
+
+    if (!jobId && !companyProfileId) {
+      return res.status(400).json({ message: "Either jobId or companyProfileId must be provided." });
+    }    
+
+    const applications = await this.jobApplicationService.listJobApplicationsForCompany({
+      jobId,
+      companyProfileId,
+      page,
+      limit,
+      query,
+      status,
+    });
+
+    return res.json(applications);
+  });
+
 
   /**
    * Fetches company profiles by a list of company IDs.

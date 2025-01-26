@@ -9,6 +9,7 @@ export enum JobApplicationStatus {
   INTERVIEW = 'interview',
   HIRED = 'hired',
   DECLINED = 'declined',
+  WITHDRAWN = 'withdrawn',
 }
 
 export interface IJobApplication extends Document {

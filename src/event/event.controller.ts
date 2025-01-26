@@ -40,7 +40,10 @@ export class EventController {
 
     private jobApplicationSuccessHandler = async (message: JobAppliedMessage) => {
         try {
-            await this.jobApplicationService.changeJobApplicationStatus(message.job_application_id, JobApplicationStatus.APPLIED);
+            const application = await this.jobApplicationService.getJobApplicationById(message.job_application_id);
+            if(application && application.status !== JobApplicationStatus.WITHDRAWN){
+                await this.jobApplicationService.changeJobApplicationStatus(message.job_application_id, JobApplicationStatus.APPLIED);
+            }
         } catch (error) {
             logger.error("Failed to update job application status")
         }
@@ -48,7 +51,10 @@ export class EventController {
 
     private jobApplicationRejectedHandler = async (message: JobApplicationRejectedMessage) => {
         try {
-            await this.jobApplicationService.changeJobApplicationStatus(message.job_application_id, JobApplicationStatus.FAILED, message.reason);
+            const application = await this.jobApplicationService.getJobApplicationById(message.job_application_id);
+            if(application && application.status !== JobApplicationStatus.WITHDRAWN){
+                await this.jobApplicationService.changeJobApplicationStatus(message.job_application_id, JobApplicationStatus.FAILED, message.reason);
+            }
         } catch (error) {
             logger.error("Failed to update job application status")
         }

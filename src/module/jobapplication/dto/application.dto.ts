@@ -41,7 +41,7 @@ export interface JobApplicationDTO {
 export interface JobApplicationListDTO extends IPaginationResponse<JobApplicationDTO> {
 }
 
-export interface UserJobApplicationFilters {
+export interface JobListFilters {
     page: number,
     limit: number,
     query?: string,
