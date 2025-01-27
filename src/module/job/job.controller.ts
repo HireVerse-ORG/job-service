@@ -7,10 +7,12 @@ import { Response } from 'express';
 import { CreateJobDTO, JobSearchDTO, PopulatedJobDTO, UpdateJobDTO } from './dto/job.dto';
 import { JobStatus } from './job.modal';
 import { IProfileService } from '../external/profile/profile.service.interface';
+import { IJobApplicationService } from '../jobapplication/interface/application.service.interface';
 
 @injectable()
 export class JobController {
   @inject(TYPES.JobService) private jobService!: IJobService;
+  @inject(TYPES.JobApplicationService) private applicantService!: IJobApplicationService;
   @inject(TYPES.ProfileService) private profileService!: IProfileService;
 
   /**
@@ -68,6 +70,16 @@ public getJob = asyncWrapper(async (req: AuthRequest, res: Response) => {
   }
 
   return res.status(200).json(jobWithProfile);
+});
+
+/**
+ * @route GET /api/jobs/company/:id
+ * @scope Company
+ **/
+public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) => {
+  const id = req.params.id;
+  const job = await this.jobService.getJobById(id);
+  return res.status(200).json(job);
 });
 
 
@@ -232,6 +244,7 @@ public getJob = asyncWrapper(async (req: AuthRequest, res: Response) => {
   public closeJob = asyncWrapper(async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
     await this.jobService.changeJobStatus(id, JobStatus.CLOSED);
-    return res.json({ message: "Job retried successfully" });
+    await this.applicantService.declineApplicantsOfJob(id);
+    return res.json({ message: "Job closed successfully" });
   });
 }

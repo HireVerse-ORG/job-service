@@ -15,6 +15,8 @@ router.get('/search', controller.searchJobs);
 router.get('/keyword-categories', controller.listJobKeyWordCategories);
 router.post('/retry/:id', allowedRoles("company"), controller.retry);
 router.post('/close/:id', allowedRoles("company"), controller.closeJob);
+
+router.get('/company/:id', allowedRoles("company"), controller.getJobForCompany);
 router.get('/:id', controller.getJob);
 router.put('/:id', allowedRoles("company"), controller.updateJob);
 

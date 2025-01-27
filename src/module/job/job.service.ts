@@ -105,6 +105,7 @@ export class JobService implements IJobService {
             filter.status = status;
         }
         const job = await this.jobRepo.populatedFindOne(filter);
+        
         if (!job) {
             throw new NotFoundError("Job not found");
         }

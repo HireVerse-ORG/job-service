@@ -93,6 +93,15 @@ export class JobApplicationService implements IJobApplicationService {
         return true;
     }
 
+    async declineApplicantsOfJob(jobId: string): Promise<boolean> {
+        const excludeStatus = [JobApplicationStatus.HIRED, JobApplicationStatus.WITHDRAWN, JobApplicationStatus.FAILED];
+        const updated = await this.jobApplicationRepo.updateMany(
+            { jobId, status: { $nin: excludeStatus } }, 
+            { $set: { status: JobApplicationStatus.DECLINED } } 
+        );
+        return updated
+    }
+
     async listUserJobApplications(userId: string, filter: JobListFilters): Promise<JobApplicationListDTO> {
         const { page, limit, query, status } = filter;
 

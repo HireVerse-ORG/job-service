@@ -11,4 +11,5 @@ export interface IJobApplicationService {
     listJobApplicationsForCompany(
         filter: { jobId?: string; companyProfileId?: string } & JobListFilters
     ): Promise<JobApplicationListDTO>;
+    declineApplicantsOfJob(jobId: string): Promise<boolean>;
 } 
