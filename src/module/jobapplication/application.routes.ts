@@ -15,5 +15,8 @@ router.post("/re-apply/:id", allowedRoles("seeker"), controller.reApplyJob);
 router.put("/withdraw-application/:id", allowedRoles("seeker"), controller.withdrawApplication);
 
 router.get("/company/applicants", allowedRoles("company"), controller.listCompanyJobApplicants);
+router.put("/company/application/:id/comment", allowedRoles("company"), controller.addComment);
+router.put("/company/application/:id/status", allowedRoles("company"), controller.updateStatusForCompany);
+router.get("/company/application/:id", allowedRoles("company"), controller.getApplicantionDetails);
 
 export const jobApplicationRoutes = router;

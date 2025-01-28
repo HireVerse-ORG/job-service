@@ -25,6 +25,11 @@ export interface IJobApplication extends Document {
   resume: string; 
   status: JobApplicationStatus;
   failedReason: string | null; 
+  declinedReason: string | null;
+  comment: {
+    text: string,
+    date: Date,
+  }, 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +51,11 @@ const JobApplicationSchema: Schema = new Schema(
       default: JobApplicationStatus.PENDING,
     }, 
     failedReason: { type: String, default: null }, 
+    declinedReason: { type: String, default: null }, 
+    comment: {
+      text: { type: String },
+      date: { type: Date, default: Date.now },
+    },
   },
   {
     timestamps: true, 

@@ -27,6 +27,7 @@ export default  {
 
     // external
     ProfileService: Symbol('ProfileService'),
+    PaymentService: Symbol('PaymentService'),
     
     // kafka
     KafkaProducer: Symbol('KafkaProducer'),

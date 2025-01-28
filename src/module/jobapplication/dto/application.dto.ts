@@ -34,6 +34,11 @@ export interface JobApplicationDTO {
     resume: string;
     status: JobApplicationStatus;
     failedReason: string | null;
+    declinedReason: string | null;
+    comment: {
+      text: string,
+      date: Date,
+    }, 
     createdAt: Date;
     updatedAt: Date;
 }

@@ -36,7 +36,14 @@ export class JobApplicationService implements IJobApplicationService {
     }
 
     async changeJobApplicationStatus(id: string, status: JobApplicationStatus, reason?: string | null): Promise<JobApplicationDTO> {
-        const updatedJobApplication = await this.jobApplicationRepo.update(id, { status: status, failedReason: reason });
+        const data: Partial<IJobApplication> = {status};
+        if(reason && status === JobApplicationStatus.FAILED){
+            data.failedReason = reason;
+        }
+        if(reason && status === JobApplicationStatus.DECLINED){
+            data.declinedReason = reason;
+        }
+        const updatedJobApplication = await this.jobApplicationRepo.update(id, data);
         if (!updatedJobApplication) {
             throw new BadRequestError("Failed to update jobApplication");
         }
@@ -93,11 +100,11 @@ export class JobApplicationService implements IJobApplicationService {
         return true;
     }
 
-    async declineApplicantsOfJob(jobId: string): Promise<boolean> {
+    async declineApplicantsOfJob(jobId: string, reason?: string): Promise<boolean> {
         const excludeStatus = [JobApplicationStatus.HIRED, JobApplicationStatus.WITHDRAWN, JobApplicationStatus.FAILED];
         const updated = await this.jobApplicationRepo.updateMany(
             { jobId, status: { $nin: excludeStatus } }, 
-            { $set: { status: JobApplicationStatus.DECLINED } } 
+            { $set: { status: JobApplicationStatus.DECLINED, declinedReason: reason || null } } 
         );
         return updated
     }
@@ -160,6 +167,25 @@ export class JobApplicationService implements IJobApplicationService {
         );
         return { ...applications, data: applications.data.map(this.toDTO) };
     }
+
+    async addComment(id: string, comment: string): Promise<boolean> {
+        if (!isValidObjectId(id)) {
+            throw new BadRequestError("Invalid job application ID");
+        }
+    
+        const application = await this.jobApplicationRepo.findById(id);
+        if (!application) {
+            throw new NotFoundError("Job application not found");
+        }
+
+        const updated = await this.jobApplicationRepo.update(id, {comment: {text: comment, date: new Date()}});
+
+        if (!updated) {
+            throw new Error("Failed to add comment.");
+        }
+
+        return true;
+    }
     
 
     private toDTO(application: IJobApplication): JobApplicationDTO {
@@ -176,6 +202,8 @@ export class JobApplicationService implements IJobApplicationService {
             resume: application.resume,
             status: application.status,
             failedReason: application.failedReason,
+            declinedReason: application.declinedReason,
+            comment: application.comment,
             createdAt: application.createdAt,
             updatedAt: application.updatedAt,
         }

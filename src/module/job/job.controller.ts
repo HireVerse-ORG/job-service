@@ -244,7 +244,7 @@ public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) =
   public closeJob = asyncWrapper(async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
     await this.jobService.changeJobStatus(id, JobStatus.CLOSED);
-    await this.applicantService.declineApplicantsOfJob(id);
+    await this.applicantService.declineApplicantsOfJob(id, "Job is closed");
     return res.json({ message: "Job closed successfully" });
   });
 }
