@@ -168,7 +168,7 @@ export class JobApplicationService implements IJobApplicationService {
         return { ...applications, data: applications.data.map(this.toDTO) };
     }
 
-    async addComment(id: string, comment: string): Promise<boolean> {
+    async addComment(id: string, comment: string): Promise<JobApplicationDTO> {
         if (!isValidObjectId(id)) {
             throw new BadRequestError("Invalid job application ID");
         }
@@ -184,7 +184,7 @@ export class JobApplicationService implements IJobApplicationService {
             throw new Error("Failed to add comment.");
         }
 
-        return true;
+        return this.toDTO(updated);
     }
     
 

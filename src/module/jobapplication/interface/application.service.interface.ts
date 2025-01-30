@@ -12,5 +12,5 @@ export interface IJobApplicationService {
         filter: { jobId?: string; companyProfileId?: string } & JobListFilters
     ): Promise<JobApplicationListDTO>;
     declineApplicantsOfJob(jobId: string, reason?: string): Promise<boolean>;
-    addComment(id: string, comment: string): Promise<boolean>;
+    addComment(id: string, comment: string): Promise<JobApplicationDTO>;
 } 

@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import TYPES from "../core/container/container.types";
 import { KafkaTopics } from "@hireverse/kafka-communication/dist/events/topics";
 import { kafka } from "@hireverse/kafka-communication";
-import { JobStatusMessage, JobAppliedMessage, JobApplicationRejectedMessage } from "@hireverse/kafka-communication/dist/events";
+import {JobAppliedMessage, JobApplicationRejectedMessage, JobJobPostAcceptedMessage, JobJobPostRejectedMessage } from "@hireverse/kafka-communication/dist/events";
 import { IJobService } from "../module/job/interface/job.service.interface";
 import { JobStatus } from "../module/job/job.modal";
 import { logger } from "../core/utils/logger";
@@ -18,23 +18,26 @@ export class EventController {
 
     async initializeSubscriptions() {
         await this.jobConsumer.subscribeToTopics([
-            { topic: KafkaTopics.JOB_STATUS_UPDATED, handler: this.jobStatusHandler},
+            { topic: KafkaTopics.JOB_POST_ACCEPTED, handler: this.jobPostAcceptedHandler},
+            { topic: KafkaTopics.JOB_POST_REJECTED, handler: this.jobPostRejectedHandler},
             { topic: KafkaTopics.JOB_APPLICATION_ACCEPTED, handler: this.jobApplicationSuccessHandler},
             { topic: KafkaTopics.JOB_APPLICATION_REJECTED, handler: this.jobApplicationRejectedHandler},
         ])
     }
 
-    private jobStatusHandler = async (message: JobStatusMessage) => {
+    private jobPostAcceptedHandler = async (message: JobJobPostAcceptedMessage) => {
         try {
-            let status = JobStatus.PENDING;
-            if (message.status === "success") {
-                status = JobStatus.LIVE;
-            } else if (message.status === "failed") {
-                status = JobStatus.FAILED;
-            }
-            await this.jobService.changeJobStatus(message.job_id, status, message.reason)
+            await this.jobService.changeJobStatus(message.job_id, JobStatus.LIVE);
         } catch (error) {
-            logger.error("Failed to update job status")
+            logger.error("Failed to update job accepted status")
+        }
+    }
+
+    private jobPostRejectedHandler = async (message: JobJobPostRejectedMessage) => {
+        try {
+            await this.jobService.changeJobStatus(message.job_id, JobStatus.FAILED, message.reason);
+        } catch (error) {
+            logger.error("Failed to update job rejected status")
         }
     }
 

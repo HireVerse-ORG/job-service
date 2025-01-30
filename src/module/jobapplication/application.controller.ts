@@ -58,6 +58,21 @@ export class JobApplicationController {
     return res.json({ message: "Job application withdrawed successfully" });
   });
 
+    /**
+   * @route GET /api/jobs/application/:id
+   * @scope Seeker
+   */
+    public getApplicationForSeeker = asyncWrapper(async (req: AuthRequest, res: Response) => {
+      const id = req.params.id;
+  
+      const application = await this.jobApplicationService.getJobApplicationById(id);
+      if (!application) {
+        return res.status(400).json({ message: "Application not found" })
+      }
+
+      return res.json(application);
+    });
+
   /**
    * @route GET /api/jobs/my-applications?query=''&status=''&page=1&limit=10
    * @scope Seeker
@@ -93,39 +108,45 @@ export class JobApplicationController {
  * @route GET /api/jobs/company/application/:id
  * @scope Company
  */
-  public getApplicantionDetails = asyncWrapper(async (req: AuthRequest, res: Response) => {
+  public getApplicantionDetailsForCompany = asyncWrapper(async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
     const userId = req.payload!.userId;
 
+    const application = await this.jobApplicationService.getJobApplicationById(id);
+    if (!application) {
+      return res.status(400).json({ message: "Application not found" })
+    }
+
     try {
-      const { response } = await this.paymentService.canAccessApplication(userId, id);
-      const canAccess = response.canAccess;
+      const { response } = await this.profileService.getSeekerProfilesByUserId(application.userId);
+      const profile = response.profile;
+      const applicationWithProfile = {
+        ...application,
+        profile
+      }
 
-      if (canAccess) {
-        const application = await this.jobApplicationService.getJobApplicationById(id);
-        if (!application) {
-          return res.status(400).json({ message: "Application not found" })
-        }
-        const { response } = await this.profileService.getSeekerProfilesByUserId(application.userId);
-        const profile = response.profile;
-        const applicationWithProfile = {
-          ...application,
-          profile
-        }
+      if (application.status === JobApplicationStatus.DECLINED) {
+        return res.json(applicationWithProfile);
+      }
 
-        if ([JobApplicationStatus.APPLIED, JobApplicationStatus.IN_REVIEW,
-        JobApplicationStatus.INTERVIEW, JobApplicationStatus.SHORTLISTED].includes(application.status)) {
-          await this.eventService.jobApplicationViewed({
-            applicant_id: application.userId,
-            job_application_id: application.id,
-            viewer_user_id: userId
-          });
-        }
+      const { response: paymentResponse } = await this.paymentService.canAccessApplication(userId, id);
+      const canAccess = paymentResponse.canAccess;
+
+      if (!canAccess) {
+        return res.status(400).json({ message: "Can't access this application" });
+      }
+
+      if ([JobApplicationStatus.APPLIED, JobApplicationStatus.IN_REVIEW,
+      JobApplicationStatus.INTERVIEW, JobApplicationStatus.SHORTLISTED].includes(application.status)) {
+        await this.eventService.jobApplicationViewed({
+          applicant_id: application.userId,
+          job_application_id: application.id,
+          viewer_user_id: userId
+        });
 
         return res.json(applicationWithProfile);
-      } else {
-        return res.status(400).json({ message: "Can't acces this application" })
       }
+
     } catch (error) {
       return res.status(400).json({ message: "Can't acces this application" })
     }
@@ -136,10 +157,18 @@ export class JobApplicationController {
 * @scope Company
 */
   public addComment = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const userId = req.payload?.userId!;
     const id = req.params.id;
     const comment = req.body.comment as string;
-    await this.jobApplicationService.addComment(id, comment);
-    return res.json({message: "Comment added succesfully"})
+    const application = await this.jobApplicationService.addComment(id, comment);
+    await this.eventService.resumeCommented({
+      commenter_user_id: userId,
+      applicant_user_id: application.userId,
+      job_application_id: application.id,
+      comment: comment,
+      title: application.jobRole,
+    })
+    return res.json({ message: "Comment added succesfully" })
   });
 
   /**
@@ -151,13 +180,13 @@ export class JobApplicationController {
     const status = req.body.status as JobApplicationStatus;
     const reason = req.body.reason as string;
 
-    if(![JobApplicationStatus.IN_REVIEW, JobApplicationStatus.SHORTLISTED,
-      JobApplicationStatus.INTERVIEW, JobApplicationStatus.HIRED, JobApplicationStatus.DECLINED
-    ].includes(status)){
+    if (![JobApplicationStatus.IN_REVIEW, JobApplicationStatus.SHORTLISTED,
+    JobApplicationStatus.INTERVIEW, JobApplicationStatus.HIRED, JobApplicationStatus.DECLINED
+    ].includes(status)) {
       return res.status(400).json("Invalid status");
     }
     await this.jobApplicationService.changeJobApplicationStatus(id, status, reason);
-    return res.json({message: "Comment added succesfully"});
+    return res.json({ message: "Comment added succesfully" });
   });
 
   /**

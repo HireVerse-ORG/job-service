@@ -53,9 +53,12 @@ const JobApplicationSchema: Schema = new Schema(
     failedReason: { type: String, default: null }, 
     declinedReason: { type: String, default: null }, 
     comment: {
-      text: { type: String },
-      date: { type: Date, default: Date.now },
-    },
+      type: {
+        text: { type: String },
+        date: { type: Date, default: Date.now },
+      },
+      default: null,
+    }    
   },
   {
     timestamps: true, 
