@@ -25,6 +25,12 @@ export default  {
     JobApplicationService: Symbol('JobApplicationService'),
     JobApplicationRepository: Symbol('JobApplicationRepository'),
 
+    // interview
+    InterviewController: Symbol('InterviewController'),
+    InterviewGrpcController: Symbol('InterviewGrpcController'),
+    InterviewService: Symbol('InterviewService'),
+    InterviewRepository: Symbol('InterviewRepository'),
+
     // external
     ProfileService: Symbol('ProfileService'),
     PaymentService: Symbol('PaymentService'),

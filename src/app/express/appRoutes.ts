@@ -4,6 +4,7 @@ import { skillRoutes } from "../../module/skills/skill.routes";
 import { jobCategoryRoutes } from "../../module/category/category.routes";
 import { jobRoutes } from "../../module/job/job.routes";
 import { jobApplicationRoutes } from "../../module/jobapplication/application.routes";
+import { interviewRoutes } from "../../module/interview/interview.routes";
 
 export function registerRoutes(app:Application, prefix="/api/jobs") {
     app.get(`${prefix}/health`, (req, res) => {
@@ -11,6 +12,7 @@ export function registerRoutes(app:Application, prefix="/api/jobs") {
     })
 
     app.use(`${prefix}`, skillRoutes);
+    app.use(`${prefix}/interview`, interviewRoutes);
     app.use(`${prefix}`, jobCategoryRoutes);
     app.use(`${prefix}`, jobApplicationRoutes);
     app.use(`${prefix}`, jobRoutes);
