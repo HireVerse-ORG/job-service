@@ -7,6 +7,7 @@ import GrpcServer from './app/grpc';
 import { checkEnvVariables } from '@hireverse/service-common/dist/utils';
 import Database from './core/database';
 import { startEventService, stopEventService } from './event';
+import { startJobs } from './app/jobs';
 
 (async () => {
     checkEnvVariables('DATABASE_URL', 'JWT_SECRET_KEY', 'KAFKA_SERVER', 'PROFILE_SERVICE_URL', 'PAYMENT_SERVICE_URL');
@@ -21,6 +22,7 @@ import { startEventService, stopEventService } from './event';
     expressServer.start(expressPort);
     grpcServer.start(grpcPort);
     startEventService();
+    startJobs();
 
     process.on('SIGINT', async () => {
         expressServer.stop();

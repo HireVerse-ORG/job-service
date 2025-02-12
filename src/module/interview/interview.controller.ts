@@ -135,6 +135,9 @@ export class InterviewController {
         if(interview.status === InterviewStatus.CANCELED){
             return res.status(400).json({message: "Interview is cancelled"});
         }
+        if(interview.status === InterviewStatus.EXPIRED){
+            return res.status(400).json({message: "Interview is expired"});
+        }
         const updatedInterview = await this.interviewService.acceptInterview(id);
         return res.json(updatedInterview);
     });
@@ -153,6 +156,9 @@ export class InterviewController {
         }
         if(interview.status === InterviewStatus.CANCELED){
             return res.status(400).json({message: "Interview is cancelled"});
+        }
+        if(interview.status === InterviewStatus.EXPIRED){
+            return res.status(400).json({message: "Interview is expired"});
         }
         const updatedInterview = await this.interviewService.rejectInterview(id);
         return res.json(updatedInterview);

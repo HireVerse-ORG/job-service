@@ -27,6 +27,7 @@ export default  {
 
     // interview
     InterviewController: Symbol('InterviewController'),
+    InterviewJobs: Symbol('InterviewJobs'),
     InterviewGrpcController: Symbol('InterviewGrpcController'),
     InterviewService: Symbol('InterviewService'),
     InterviewRepository: Symbol('InterviewRepository'),
