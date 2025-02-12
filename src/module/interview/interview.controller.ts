@@ -8,11 +8,13 @@ import { CreateInterviewDto } from "./dto/interview.dto";
 import { IJobApplicationService } from "../jobapplication/interface/application.service.interface";
 import { JobApplicationStatus } from "../jobapplication/application.modal";
 import { InterviewStatus, InterviewType } from "./interview.modal";
+import { EventService } from "../event/event.service";
 
 @injectable()
 export class InterviewController {
     @inject(TYPES.InterviewService) private interviewService!: IInterviewService;
     @inject(TYPES.JobApplicationService) private jobApplicationService!: IJobApplicationService;
+    @inject(TYPES.EventService) private eventService!: EventService;
 
     /**
      * @route POST /jobs/interview/schedule
@@ -36,6 +38,16 @@ export class InterviewController {
 
         const newInterview = await this.interviewService.createInterview(interviewData);
         await this.jobApplicationService.changeJobApplicationStatus(applicationId, JobApplicationStatus.INTERVIEW);
+        await this.eventService.interviewScheduled({
+            id: newInterview.id,
+            applicantId: newInterview.applicantId,
+            job: newInterview.job,
+            application: newInterview.application,
+            interviewerId: newInterview.interviewerId,
+            scheduledTime: newInterview.scheduledTime,
+            type: newInterview.type,
+            timestamp: new Date(),
+        })
         return res.status(201).json(newInterview);
     });
 
@@ -139,6 +151,16 @@ export class InterviewController {
             return res.status(400).json({message: "Interview is expired"});
         }
         const updatedInterview = await this.interviewService.acceptInterview(id);
+        await this.eventService.interviewAccepted({
+            id: updatedInterview.id,
+            applicantId: updatedInterview.applicantId,
+            job: updatedInterview.job,
+            application: updatedInterview.application,
+            interviewerId: updatedInterview.interviewerId,
+            scheduledTime: updatedInterview.scheduledTime,
+            type: updatedInterview.type,
+            timestamp: new Date(),
+        })
         return res.json(updatedInterview);
     });
 
@@ -161,6 +183,16 @@ export class InterviewController {
             return res.status(400).json({message: "Interview is expired"});
         }
         const updatedInterview = await this.interviewService.rejectInterview(id);
+        await this.eventService.interviewRejected({
+            id: updatedInterview.id,
+            applicantId: updatedInterview.applicantId,
+            job: updatedInterview.job,
+            application: updatedInterview.application,
+            interviewerId: updatedInterview.interviewerId,
+            scheduledTime: updatedInterview.scheduledTime,
+            type: updatedInterview.type,
+            timestamp: new Date(),
+        })
         return res.json(updatedInterview);
     });
 }

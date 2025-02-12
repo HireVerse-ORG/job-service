@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import TYPES from "../../core/container/container.types";
-import { EventService } from "../../event/event.service";
+import { EventService } from "../event/event.service";
 import { IJobApplicationService } from "./interface/application.service.interface";
 import { IJobApplicationRepository } from "./interface/application.repository.interface";
 import { CreateJobAppplicationDTO, JobApplicationDTO, JobApplicationListDTO, JobListFilters } from "./dto/application.dto";

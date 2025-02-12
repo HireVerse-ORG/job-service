@@ -4,7 +4,7 @@ import { BadRequestError, NotFoundError } from "@hireverse/service-common/dist/a
 import { querySanitizer } from "@hireverse/service-common/dist/utils";
 import { IJobService } from "./interface/job.service.interface";
 import { IJobRepository } from "./interface/job.repository.interface";
-import { EventService } from "../../event/event.service";
+import { EventService } from "../event/event.service";
 import { CreateJobDTO, JobDTO, JobListDTO, JobSearchDTO, PopulatedJobDTO, PopulatedJobListDTO, UpdateJobDTO } from "./dto/job.dto";
 import { IJob, JobStatus } from "./job.modal";
 import { FilterQuery, isValidObjectId } from "mongoose";

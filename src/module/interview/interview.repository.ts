@@ -13,7 +13,7 @@ export class InterviewRepository extends MongoBaseRepository<IInterview> impleme
     async expireInterviews(date: Date): Promise<{ modifiedCount: number; }> {
         try {
             const updated = await this.repository.updateMany({
-                scheduledTime: {$gte: date},
+                scheduledTime: {$lte: date},
                 status: InterviewStatus.SCHEDULED
             }, {
                 $set: {status: InterviewStatus.EXPIRED}

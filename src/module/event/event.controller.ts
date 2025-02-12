@@ -1,13 +1,13 @@
 import { inject, injectable } from "inversify";
-import TYPES from "../core/container/container.types";
+import TYPES from "../../core/container/container.types";
 import { KafkaTopics } from "@hireverse/kafka-communication/dist/events/topics";
 import { kafka } from "@hireverse/kafka-communication";
 import {JobAppliedMessage, JobApplicationRejectedMessage, JobJobPostAcceptedMessage, JobJobPostRejectedMessage } from "@hireverse/kafka-communication/dist/events";
-import { IJobService } from "../module/job/interface/job.service.interface";
-import { JobStatus } from "../module/job/job.modal";
-import { logger } from "../core/utils/logger";
-import { IJobApplicationService } from "../module/jobapplication/interface/application.service.interface";
-import { JobApplicationStatus } from "../module/jobapplication/application.modal";
+import { IJobService } from "../job/interface/job.service.interface";
+import { JobStatus } from "../job/job.modal";
+import { logger } from "../../core/utils/logger";
+import { IJobApplicationService } from "../jobapplication/interface/application.service.interface";
+import { JobApplicationStatus } from "../jobapplication/application.modal";
 
 @injectable()
 export class EventController {

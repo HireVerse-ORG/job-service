@@ -1,7 +1,7 @@
 import { Container } from "inversify";
 import { kafka } from "@hireverse/kafka-communication";
 import { EventController } from "./event.controller";
-import TYPES from "../core/container/container.types";
+import TYPES from "../../core/container/container.types";
 import { KafkaConnect, KafkaConsumer, KafkaProducer } from "@hireverse/kafka-communication/dist/kafka";
 import { EventService } from "./event.service";
 

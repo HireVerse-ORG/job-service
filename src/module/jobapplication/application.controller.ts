@@ -10,7 +10,7 @@ import { IJobService } from '../job/interface/job.service.interface';
 import { JobStatus } from '../job/job.modal';
 import { JobApplicationStatus } from './application.modal';
 import { IPaymentService } from '../external/payment/payment.service.interface';
-import { EventService } from '../../event/event.service';
+import { EventService } from '../event/event.service';
 
 @injectable()
 export class JobApplicationController {
