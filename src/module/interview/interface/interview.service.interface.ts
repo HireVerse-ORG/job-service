@@ -1,6 +1,6 @@
 import { IPaginationResponse } from "@hireverse/service-common/dist/repository";
 import { CreateInterviewDto, InterviewDTO, UpdateInterviewDto } from "../dto/interview.dto";
-import { IInterview, InterviewStatus } from "../interview.modal";
+import { IInterview, InterviewStatus, InterviewType } from "../interview.modal";
 
 export interface IInterviewService {
     createInterview(dto: CreateInterviewDto): Promise<InterviewDTO>;
@@ -9,9 +9,16 @@ export interface IInterviewService {
     getInterviewsByApplication(application: string): Promise<InterviewDTO[]>;
     getInterviewsByApplicant(filter: {
             applicantId: string, 
-            status?: InterviewStatus
+            statuses?: InterviewStatus[],
+            types?: InterviewType[],
+            upcoming?: boolean,
         }, page: number, limit: number): Promise<IPaginationResponse<IInterview>>;
-    getInterviewsByInterviewer(interviewerId: string): Promise<InterviewDTO[]>;
+    getInterviewsByInterviewer(filter: {
+        interviewerId: string, 
+        statuses?: InterviewStatus[],
+        types?: InterviewType[],
+        upcoming?: boolean,
+    }, page: number, limit: number): Promise<IPaginationResponse<IInterview>>;
     cancelInterview(interviewId: string): Promise<InterviewDTO>;
     acceptInterview(interviewId: string): Promise<InterviewDTO>;
     rejectInterview(interviewId: string): Promise<InterviewDTO>;

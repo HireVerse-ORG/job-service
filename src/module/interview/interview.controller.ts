@@ -7,7 +7,7 @@ import { Response } from "express";
 import { CreateInterviewDto } from "./dto/interview.dto";
 import { IJobApplicationService } from "../jobapplication/interface/application.service.interface";
 import { JobApplicationStatus } from "../jobapplication/application.modal";
-import { InterviewStatus } from "./interview.modal";
+import { InterviewStatus, InterviewType } from "./interview.modal";
 
 @injectable()
 export class InterviewController {
@@ -65,35 +65,48 @@ export class InterviewController {
     });
 
     /**
-     * @route GET /jobs/interview/applicant/schedules
-     * @scope Seeker
+     * @route GET /jobs/interview/my-schedules?page=&limit=&types=online&statuses=accepted,rejected,scheduled&upcoming=true
+     * @scope Seeker|Company
      *
      * Retrieves all interviews for a specific applicant.
      */
-    public getInterviewsByApplicant = asyncWrapper(async (req: AuthRequest, res: Response) => {
-        const applicantId  = req.payload?.userId!;
+    public getMyInterviewsSchedules = asyncWrapper(async (req: AuthRequest, res: Response) => {
+        const userId = req.payload?.userId!;
+        const role = req.payload?.role!;
+
         const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
         const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
-        const status = req.query.status as InterviewStatus || undefined;
+        const statusesStr = req.query.statuses as string | undefined;
+        const typesStr = req.query.types as string | undefined;
+        const upcomingStr = req.query.upcoming as string | undefined;
+        
+        const statuses = statusesStr ? statusesStr.split(",").map(s => s.trim()) as InterviewStatus[] : undefined;
+        const types = typesStr ? typesStr.split(",").map(s => s.trim()) as InterviewType[] : undefined;
 
-        if(status === InterviewStatus.CANCELED){
-            return res.status(400).json({ message: "Invalid Status" });
+        const upcoming = upcomingStr ? upcomingStr.toLowerCase() === "true" : undefined;
+
+        if(role === "seeker"){
+            const interviews = await this.interviewService.getInterviewsByApplicant({
+                applicantId: userId,
+                statuses,
+                types,
+                upcoming
+            }, page, limit);
+            return res.json(interviews);
+
+        } else if(role === "company") {
+            const interviews = await this.interviewService.getInterviewsByInterviewer({
+                interviewerId: userId,
+                statuses,
+                types,
+                upcoming
+            }, page, limit);
+            return res.json(interviews);
+        } else {
+            return res.status(403).json({ message: "You cant access it." });
         }
-        const interviews = await this.interviewService.getInterviewsByApplicant({applicantId, status}, page, limit);
-        return res.json(interviews);
     });
 
-    /**
-     * @route GET /jobs/interview/interviewer/:interviewerId
-     * @scope Company
-     *
-     * Retrieves all interviews for a specific interviewer (company).
-     */
-    public getInterviewsByInterviewer = asyncWrapper(async (req: AuthRequest, res: Response) => {
-        const { interviewerId } = req.params;
-        const interviews = await this.interviewService.getInterviewsByInterviewer(interviewerId);
-        return res.json({ data: interviews });
-    });
 
     /**
      * @route PUT /jobs/interview/:id/cancel
@@ -115,6 +128,13 @@ export class InterviewController {
      */
     public acceptInterview = asyncWrapper(async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
+        const interview = await this.interviewService.getInterviewById(id);
+        if(!interview){
+            return res.status(404).json({message: "Interview not found"});
+        }
+        if(interview.status === InterviewStatus.CANCELED){
+            return res.status(400).json({message: "Interview is cancelled"});
+        }
         const updatedInterview = await this.interviewService.acceptInterview(id);
         return res.json(updatedInterview);
     });
@@ -127,6 +147,13 @@ export class InterviewController {
      */
     public rejectInterview = asyncWrapper(async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
+        const interview = await this.interviewService.getInterviewById(id);
+        if(!interview){
+            return res.status(404).json({message: "Interview not found"});
+        }
+        if(interview.status === InterviewStatus.CANCELED){
+            return res.status(400).json({message: "Interview is cancelled"});
+        }
         const updatedInterview = await this.interviewService.rejectInterview(id);
         return res.json(updatedInterview);
     });

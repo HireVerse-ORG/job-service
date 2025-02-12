@@ -4,7 +4,7 @@ import TYPES from "../../core/container/container.types";
 import { IInterviewRepository } from "./interface/interview.repository.interface";
 import { CreateInterviewDto, InterviewDTO, UpdateInterviewDto } from "./dto/interview.dto";
 import { BadRequestError, NotFoundError } from "@hireverse/service-common/dist/app.errors";
-import { IInterview, InterviewStatus } from "./interview.modal";
+import { IInterview, InterviewStatus, InterviewType } from "./interview.modal";
 import { IPaginationResponse } from "@hireverse/service-common/dist/repository";
 import { FilterQuery } from "mongoose";
 
@@ -19,9 +19,9 @@ export class InterviewService implements IInterviewService {
             applicantId: dto.applicantId,
             interviewerId: dto.interviewerId,
             scheduledTime: dto.scheduledTime,
-            status: {$nin: [InterviewStatus.CANCELED, InterviewStatus.REJECTED]},
+            status: { $nin: [InterviewStatus.CANCELED, InterviewStatus.REJECTED] },
         });
-        if(existingSchedule){
+        if (existingSchedule) {
             throw new BadRequestError("Interview schedule already exists");
         }
         const interview = await this.interviewRepo.create(dto);
@@ -42,27 +42,58 @@ export class InterviewService implements IInterviewService {
     }
 
     async getInterviewsByApplication(application: string): Promise<InterviewDTO[]> {
-        const interviews = await this.interviewRepo.findAll({application, status: {$ne: InterviewStatus.CANCELED}});
+        const interviews = await this.interviewRepo.findAll({ application, status: { $ne: InterviewStatus.CANCELED } });
         return interviews.map((interview) => this.toDTO(interview));
     }
 
     async getInterviewsByApplicant(filter: {
-        applicantId: string, 
-        status?: InterviewStatus
+        applicantId: string,
+        statuses?: InterviewStatus[],
+        types?: InterviewType[],
+        upcoming?: boolean,
     }, page: number, limit: number): Promise<IPaginationResponse<IInterview>> {
         const query: FilterQuery<IInterview> = { applicantId: filter.applicantId };
-        if(filter.status) {
-            query.status = filter.status;
+        if (filter.statuses) {
+            query.status = { $in: filter.statuses };
         } else {
-            query.status = {$ne: InterviewStatus.CANCELED};
+            query.status = { $nin: [InterviewStatus.CANCELED, InterviewStatus.EXPIRED] };
         }
-        const interviews = await this.interviewRepo.paginate(query, page, limit, {populate: 'application'});
+    
+        if (filter.types) {
+            query.type = { $in: filter.types };
+        }
+    
+        if (filter.upcoming) {
+            query.scheduledTime = { $gte: new Date() };
+        }
+
+        const interviews = await this.interviewRepo.paginate(query, page, limit, { populate: 'application', sort: {scheduledTime: -1} });
         return interviews;
     }
 
-    async getInterviewsByInterviewer(interviewerId: string): Promise<InterviewDTO[]> {
-        const interviews = await this.interviewRepo.findAll({interviewerId});
-        return interviews.map((interview) => this.toDTO(interview));
+    async getInterviewsByInterviewer(filter: {
+        interviewerId: string, 
+        statuses?: InterviewStatus[],
+        types?: InterviewType[],
+        upcoming?: boolean,
+    }, page: number, limit: number): Promise<IPaginationResponse<IInterview>> {
+        const query: FilterQuery<IInterview> = { interviewerId: filter.interviewerId };
+        if (filter.statuses) {
+            query.status = { $in: filter.statuses };
+        } else {
+            query.status = { $nin: [InterviewStatus.CANCELED] };
+        }
+    
+        if (filter.types) {
+            query.type = { $in: filter.types };
+        }
+    
+        if (filter.upcoming) {
+            query.scheduledTime = { $gte: new Date() };
+        }
+
+        const interviews = await this.interviewRepo.paginate(query, page, limit, { populate: 'application', sort: {scheduledTime: -1} });
+        return interviews;
     }
 
     async cancelInterview(interviewId: string): Promise<InterviewDTO> {

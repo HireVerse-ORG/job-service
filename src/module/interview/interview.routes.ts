@@ -10,12 +10,12 @@ const interviewController = container.get<InterviewController>(TYPES.InterviewCo
 const router = Router();
 
 router.post("/schedule", allowedRoles("company"), interviewController.scheduleInterview);
-router.get("/:id", allowedRoles("company", "seeker"), interviewController.getInterview);
+router.get("/my-schedules", allowedRoles("seeker", "company"), interviewController.getMyInterviewsSchedules);
 router.get("/application/:applicationId", allowedRoles("company", "seeker"), interviewController.getApplicationInterviews);
-router.get("/applicant/schedules", allowedRoles("seeker"), interviewController.getInterviewsByApplicant);
-router.get("/interviewer/:interviewerId", allowedRoles("company"), interviewController.getInterviewsByInterviewer);
+
 router.put("/:id/cancel", allowedRoles("company"), interviewController.cancelInterview);
 router.put("/:id/accept", allowedRoles("seeker"), interviewController.acceptInterview);
 router.put("/:id/reject", allowedRoles("seeker"), interviewController.rejectInterview);
+router.get("/:id", allowedRoles("company", "seeker"), interviewController.getInterview);
 
 export const interviewRoutes = router;
