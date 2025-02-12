@@ -1,9 +1,9 @@
 import * as grpc from '@grpc/grpc-js';
 import { logger } from '../../core/utils/logger';
-import { jobSkillService } from './services';
+import { jobInterviewService, jobSkillService } from './services';
 
 const registerServices = (server: grpc.Server) => {
-    const services = [jobSkillService]
+    const services = [jobSkillService, jobInterviewService]
 
     services.forEach(({ name, serviceDefinition, implementation }) => {
         server.addService(serviceDefinition, implementation);

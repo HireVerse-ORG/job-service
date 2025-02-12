@@ -1,14 +1,14 @@
 import { inject, injectable } from "inversify";
-import TYPES from "../../core/container/container.types";
-import { IInterviewService } from "./interface/interview.service.interface";
+import TYPES from "../../../core/container/container.types";
+import { IInterviewService } from "../interface/interview.service.interface";
 import asyncWrapper from "@hireverse/service-common/dist/utils/asyncWrapper";
 import { AuthRequest } from "@hireverse/service-common/dist/token/user/userRequest";
 import { Response } from "express";
-import { CreateInterviewDto } from "./dto/interview.dto";
-import { IJobApplicationService } from "../jobapplication/interface/application.service.interface";
-import { JobApplicationStatus } from "../jobapplication/application.modal";
-import { InterviewStatus, InterviewType } from "./interview.modal";
-import { EventService } from "../event/event.service";
+import { CreateInterviewDto } from "../dto/interview.dto";
+import { IJobApplicationService } from "../../jobapplication/interface/application.service.interface";
+import { JobApplicationStatus } from "../../jobapplication/application.modal";
+import { InterviewStatus, InterviewType } from "../interview.modal";
+import { EventService } from "../../event/event.service";
 
 @injectable()
 export class InterviewController {

@@ -2,7 +2,7 @@ import { Router } from "express";
 import TYPES from "../../core/container/container.types";
 import {allowedRoles, isAuthenticated} from "@hireverse/service-common/dist/token/user/userMiddleware";
 import { container } from "../../core/container";
-import { InterviewController } from "./interview.controller";
+import { InterviewController } from "./controllers/interview.controller";
 
 const interviewController = container.get<InterviewController>(TYPES.InterviewController)
 
