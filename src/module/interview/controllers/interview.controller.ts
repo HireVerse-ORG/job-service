@@ -133,6 +133,18 @@ export class InterviewController {
     });
 
     /**
+     * @route PUT /jobs/interview/:id/complete
+     * @scope Company
+     *
+     * completes an interview.
+     */
+    public completeInterview = asyncWrapper(async (req: AuthRequest, res: Response) => {
+        const { id } = req.params;
+        const updatedInterview = await this.interviewService.completeInterview(id);
+        return res.json(updatedInterview);
+    });
+
+    /**
      * @route PUT /jobs/interview/:id/accept
      * @scope Seeker
      *

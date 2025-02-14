@@ -22,4 +22,6 @@ export interface IInterviewService {
     cancelInterview(interviewId: string): Promise<InterviewDTO>;
     acceptInterview(interviewId: string): Promise<InterviewDTO>;
     rejectInterview(interviewId: string): Promise<InterviewDTO>;
+    completeInterview(interviewId: string): Promise<InterviewDTO>;
+    cancelAllJobInterview(jobId: string): Promise<boolean>;
 }

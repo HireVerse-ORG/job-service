@@ -8,11 +8,13 @@ import { CreateJobDTO, JobSearchDTO, PopulatedJobDTO, UpdateJobDTO } from './dto
 import { JobStatus } from './job.modal';
 import { IProfileService } from '../external/profile/profile.service.interface';
 import { IJobApplicationService } from '../jobapplication/interface/application.service.interface';
+import { IInterviewService } from '../interview/interface/interview.service.interface';
 
 @injectable()
 export class JobController {
   @inject(TYPES.JobService) private jobService!: IJobService;
   @inject(TYPES.JobApplicationService) private applicantService!: IJobApplicationService;
+  @inject(TYPES.InterviewService) private interviewService!: IInterviewService;
   @inject(TYPES.ProfileService) private profileService!: IProfileService;
 
   /**
@@ -245,6 +247,7 @@ public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) =
     const id = req.params.id;
     await this.jobService.changeJobStatus(id, JobStatus.CLOSED);
     await this.applicantService.declineApplicantsOfJob(id, "Job is closed");
+    await this.interviewService.cancelAllJobInterview(id);
     return res.json({ message: "Job closed successfully" });
   });
 }

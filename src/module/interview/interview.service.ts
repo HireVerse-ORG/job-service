@@ -42,7 +42,7 @@ export class InterviewService implements IInterviewService {
     }
 
     async getInterviewsByApplication(application: string): Promise<InterviewDTO[]> {
-        const interviews = await this.interviewRepo.findAll({ application, status: { $ne: InterviewStatus.CANCELED } });
+        const interviews = await this.interviewRepo.findAll({ application, status: { $nin: [InterviewStatus.CANCELED] } });
         return interviews.map((interview) => this.toDTO(interview));
     }
 
@@ -56,7 +56,7 @@ export class InterviewService implements IInterviewService {
         if (filter.statuses) {
             query.status = { $in: filter.statuses };
         } else {
-            query.status = { $nin: [InterviewStatus.CANCELED, InterviewStatus.EXPIRED] };
+            query.status = { $nin: [InterviewStatus.CANCELED, InterviewStatus.EXPIRED, InterviewStatus.COMPLETED] };
         }
     
         if (filter.types) {
@@ -118,6 +118,24 @@ export class InterviewService implements IInterviewService {
             throw new NotFoundError("Interview not found");
         }
         return this.toDTO(updatedInterview);
+    }
+
+    async completeInterview(interviewId: string): Promise<InterviewDTO> {
+        const updatedInterview = await this.interviewRepo.update(interviewId, { status: InterviewStatus.COMPLETED });
+        if (!updatedInterview) {
+            throw new NotFoundError("Interview not found");
+        }
+        return this.toDTO(updatedInterview);
+    }
+
+    async cancelAllJobInterview(jobId: string): Promise<boolean> {
+        const result = await this.interviewRepo.updateMany({
+            status: InterviewStatus.CANCELED,
+        }, {
+            job: jobId,
+            status: {$nin: [InterviewStatus.EXPIRED, InterviewStatus.REJECTED, InterviewStatus.COMPLETED]}
+        })
+        return result.modifiedCount > 0;
     }
 
     private toDTO(interview: IInterview): InterviewDTO {

@@ -10,7 +10,8 @@ export enum InterviewStatus {
     ACCEPTED = 'accepted',
     REJECTED = 'rejected',
     CANCELED = 'canceled',
-    EXPIRED = 'expired'
+    EXPIRED = 'expired',
+    COMPLETED = 'completed'
 }
 
 export interface IInterview extends Document {
