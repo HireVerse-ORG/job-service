@@ -11,11 +11,13 @@ import { JobStatus } from '../job/job.modal';
 import { JobApplicationStatus } from './application.modal';
 import { IPaymentService } from '../external/payment/payment.service.interface';
 import { EventService } from '../event/event.service';
+import { IInterviewService } from '../interview/interface/interview.service.interface';
 
 @injectable()
 export class JobApplicationController {
   @inject(TYPES.JobApplicationService) private jobApplicationService!: IJobApplicationService;
   @inject(TYPES.JobService) private jobService!: IJobService;
+  @inject(TYPES.InterviewService) private interviewService!: IInterviewService;
   @inject(TYPES.ProfileService) private profileService!: IProfileService;
   @inject(TYPES.PaymentService) private paymentService!: IPaymentService;
   @inject(TYPES.EventService) private eventService!: EventService;
@@ -58,20 +60,60 @@ export class JobApplicationController {
     return res.json({ message: "Job application withdrawed successfully" });
   });
 
-    /**
-   * @route GET /api/jobs/application/:id
-   * @scope Seeker
-   */
-    public getApplicationForSeeker = asyncWrapper(async (req: AuthRequest, res: Response) => {
-      const id = req.params.id;
-  
-      const application = await this.jobApplicationService.getJobApplicationById(id);
-      if (!application) {
-        return res.status(400).json({ message: "Application not found" })
-      }
+  /**
+ * @route GET /api/jobs/application/:id
+ * @scope Seeker
+ */
+  public getApplicationForSeeker = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
 
-      return res.json(application);
-    });
+    const application = await this.jobApplicationService.getJobApplicationById(id);
+    if (!application) {
+      return res.status(400).json({ message: "Application not found" })
+    }
+
+    return res.json(application);
+  });
+
+  /**
+ * @route PUT /application/:id/accept-offer
+ * @scope Seeker
+ */
+  public acceptOffer = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+
+    const application = await this.jobApplicationService.getJobApplicationById(id);
+    if (!application) {
+      return res.status(400).json({ message: "Application not found" })
+    }
+
+    if(application.status === JobApplicationStatus.DECLINED){
+      return res.status(400).json({ message: "Application is declined" })
+    }
+
+    await this.jobApplicationService.changeJobApplicationStatus(id, JobApplicationStatus.HIRED);
+    return res.json(application);
+  });
+
+  /**
+ * @route PUT /application/:id/reject-offer
+ * @scope Seeker
+ */
+  public declineOffer = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+
+    const application = await this.jobApplicationService.getJobApplicationById(id);
+    if (!application) {
+      return res.status(400).json({ message: "Application not found" })
+    }
+
+    if(application.status === JobApplicationStatus.DECLINED){
+      return res.status(400).json({ message: "Application is declined" })
+    }
+
+    await this.jobApplicationService.changeJobApplicationStatus(id, JobApplicationStatus.DECLINED, "Canditate rejected Offer letter");
+    return res.json(application);
+  });
 
   /**
    * @route GET /api/jobs/my-applications?query=''&status=''&page=1&limit=10
@@ -113,6 +155,7 @@ export class JobApplicationController {
     const userId = req.payload!.userId;
 
     const application = await this.jobApplicationService.getJobApplicationById(id);
+
     if (!application) {
       return res.status(400).json({ message: "Application not found" })
     }
@@ -120,6 +163,7 @@ export class JobApplicationController {
     try {
       const { response } = await this.profileService.getSeekerProfilesByUserId(application.userId);
       const profile = response.profile;
+
       const applicationWithProfile = {
         ...application,
         profile
@@ -143,10 +187,9 @@ export class JobApplicationController {
           job_application_id: application.id,
           viewer_user_id: userId
         });
-
-        return res.json(applicationWithProfile);
       }
 
+      return res.json(applicationWithProfile);
     } catch (error) {
       return res.status(400).json({ message: "Can't acces this application" })
     }
@@ -181,12 +224,48 @@ export class JobApplicationController {
     const reason = req.body.reason as string;
 
     if (![JobApplicationStatus.IN_REVIEW, JobApplicationStatus.SHORTLISTED,
-    JobApplicationStatus.INTERVIEW, JobApplicationStatus.HIRED, JobApplicationStatus.DECLINED
+      JobApplicationStatus.INTERVIEW, JobApplicationStatus.OFFERED,
+      JobApplicationStatus.DECLINED
     ].includes(status)) {
       return res.status(400).json("Invalid status");
     }
     await this.jobApplicationService.changeJobApplicationStatus(id, status, reason);
     return res.json({ message: "Comment added succesfully" });
+  });
+
+  /**
+* @route POST /api/jobs/company/application/offer-job
+* @scope Company
+*/
+  public offerJob = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const {applicationId} = req.body;
+
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: "No file provided." });
+    }
+
+    const application = await this.jobApplicationService.getJobApplicationById(applicationId);
+
+    if(!application){
+      return res.status(404).json({message: "Job Application not found"})
+    }
+    
+    const updatedApplication = await this.jobApplicationService.updateJobApplication(applicationId, {
+      offerLetter: req.file?.path,
+      status: JobApplicationStatus.OFFERED
+    });
+
+    await this.interviewService.cancelAllJobInterview(application.jobId);
+    await this.eventService.jobOffered({
+      job_application_id: application.id,
+      applicantId: application.userId,
+      job_id: application.jobId,
+      compnayId: req.payload?.userId!,
+      timestamp: new Date()
+    })
+
+    return res.json(updatedApplication);
   });
 
   /**

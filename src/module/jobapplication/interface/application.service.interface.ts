@@ -1,8 +1,9 @@
 import { JobApplicationStatus } from "../application.modal";
-import { CreateJobAppplicationDTO, JobApplicationDTO, JobApplicationListDTO, JobListFilters } from "../dto/application.dto";
+import { CreateJobAppplicationDTO, JobApplicationDTO, JobApplicationListDTO, JobListFilters, UpdateJobAppplicationDTO } from "../dto/application.dto";
 
 export interface IJobApplicationService {
     createJobApplication(data: CreateJobAppplicationDTO): Promise<JobApplicationDTO>;
+    updateJobApplication(id: string, data: UpdateJobAppplicationDTO): Promise<JobApplicationDTO>;
     getJobApplicationById(id: string): Promise<JobApplicationDTO | null>;
     changeJobApplicationStatus(id: string, status: JobApplicationStatus, reason?:string | null): Promise<JobApplicationDTO>;
     retryJobApplication(id: string): Promise<boolean>;

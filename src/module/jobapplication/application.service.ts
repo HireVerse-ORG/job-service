@@ -3,7 +3,7 @@ import TYPES from "../../core/container/container.types";
 import { EventService } from "../event/event.service";
 import { IJobApplicationService } from "./interface/application.service.interface";
 import { IJobApplicationRepository } from "./interface/application.repository.interface";
-import { CreateJobAppplicationDTO, JobApplicationDTO, JobApplicationListDTO, JobListFilters } from "./dto/application.dto";
+import { CreateJobAppplicationDTO, JobApplicationDTO, JobApplicationListDTO, JobListFilters, UpdateJobAppplicationDTO } from "./dto/application.dto";
 import { BadRequestError, NotFoundError } from "@hireverse/service-common/dist/app.errors";
 import { IJobApplication, JobApplicationStatus } from "./application.modal";
 import { FilterQuery, isValidObjectId } from "mongoose";
@@ -28,6 +28,20 @@ export class JobApplicationService implements IJobApplicationService {
         const application = await this.jobApplicationRepo.create(data);
         await this.eventService.jobAppliedEvent({ job_application_id: application.id, user_id: application.userId });
         return this.toDTO(application);
+    }
+
+    async updateJobApplication(id: string, data: UpdateJobAppplicationDTO): Promise<JobApplicationDTO> {
+        if(!isValidObjectId(id)){
+            throw new BadRequestError("Invalid id");
+        }
+
+        const updated = await this.jobApplicationRepo.update(id, data);
+
+        if(!updated){
+            throw new BadRequestError("Failed to update job application");
+        }
+
+        return this.toDTO(updated);
     }
 
     async getJobApplicationById(id: string): Promise<JobApplicationDTO | null> {
@@ -200,6 +214,7 @@ export class JobApplicationService implements IJobApplicationService {
             phone: application.phone,
             coverLetter: application.coverLetter,
             resume: application.resume,
+            offerLetter: application.offerLetter,
             status: application.status,
             failedReason: application.failedReason,
             declinedReason: application.declinedReason,

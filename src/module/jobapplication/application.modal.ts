@@ -7,6 +7,7 @@ export enum JobApplicationStatus {
   IN_REVIEW = 'in-review',
   SHORTLISTED = 'shortlisted',
   INTERVIEW = 'interview',
+  OFFERED = 'offered',
   HIRED = 'hired',
   DECLINED = 'declined',
   WITHDRAWN = 'withdrawn',
@@ -22,7 +23,8 @@ export interface IJobApplication extends Document {
   email: string;
   phone?: string;
   coverLetter?: string;
-  resume: string; 
+  resume: string;
+  offerLetter?: string; 
   status: JobApplicationStatus;
   failedReason: string | null; 
   declinedReason: string | null;
@@ -45,6 +47,7 @@ const JobApplicationSchema: Schema = new Schema(
     phone: { type: String }, 
     coverLetter: { type: String },
     resume: { type: String, required: true }, 
+    offerLetter: { type: String }, 
     status: {
       type: String,
       enum: Object.values(JobApplicationStatus),

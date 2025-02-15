@@ -19,6 +19,8 @@ export interface UpdateJobAppplicationDTO {
     phone?: string;
     coverLetter?: string;
     resume?: string;
+    offerLetter?: string; 
+    status?: JobApplicationStatus;
 }
 
 export interface JobApplicationDTO {
@@ -32,6 +34,7 @@ export interface JobApplicationDTO {
     phone?: string;
     coverLetter?: string;
     resume: string;
+    offerLetter?: string; 
     status: JobApplicationStatus;
     failedReason: string | null;
     declinedReason: string | null;
