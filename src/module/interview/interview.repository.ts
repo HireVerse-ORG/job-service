@@ -38,4 +38,12 @@ export class InterviewRepository extends MongoBaseRepository<IInterview> impleme
             throw new InternalError("Failed to perform update many");
         }
     }
+
+    async countInterviews(filter?: RootFilterQuery<IInterview>): Promise<number> {
+        try {
+            return await this.repository.countDocuments(filter);
+        } catch (error) {
+            throw new InternalError("Failed to complete count operation")
+        }
+    }
 }

@@ -6,5 +6,6 @@ export interface IInterviewRepository extends IMongoRepository<IInterview> {
     expireInterviews(date: Date): Promise<{modifiedCount: number}>;
     updateMany(data: Partial<IInterview>, filter?: RootFilterQuery<IInterview>): Promise<{
         modifiedCount: number;
-    }>
+    }>;
+    countInterviews(filter?: RootFilterQuery<IInterview>): Promise<number>;
 }

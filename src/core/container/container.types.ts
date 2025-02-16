@@ -31,6 +31,9 @@ export default  {
     InterviewGrpcController: Symbol('InterviewGrpcController'),
     InterviewService: Symbol('InterviewService'),
     InterviewRepository: Symbol('InterviewRepository'),
+    
+    //statitics
+    StatisticsController: Symbol('StatisticsController'),
 
     // external
     ProfileService: Symbol('ProfileService'),

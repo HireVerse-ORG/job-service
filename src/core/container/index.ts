@@ -6,6 +6,7 @@ import { loadJobs } from "../../module/job/job.module";
 import { loadExternalContainer } from "../../module/external/external.module";
 import { loadJobApplicationContainer } from "../../module/jobapplication/application.module";
 import { loadInterviewContainer } from "../../module/interview/interview.module";
+import { loadStatisticsContainer } from "../../module/statistics/statistics.module";
 
 const container = new Container();
 
@@ -16,6 +17,7 @@ loadJobCategorys(container);
 loadJobs(container);
 loadJobApplicationContainer(container);
 loadInterviewContainer(container);
+loadStatisticsContainer(container);
 
 export { container };
 

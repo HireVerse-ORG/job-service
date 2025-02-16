@@ -2,7 +2,7 @@ import { IPaginationResponse, MongoBaseRepository } from "@hireverse/service-com
 import { injectable } from "inversify";
 import Job, { IJob, JobStatus } from "./job.modal";
 import { IJobRepository } from "./interface/job.repository.interface";
-import { FilterQuery, PipelineStage, QueryOptions, Types } from "mongoose";
+import { FilterQuery, PipelineStage, QueryOptions, RootFilterQuery, Types } from "mongoose";
 import { ISkill } from "../skills/skill.modal";
 import { IJobCategory } from "../category/category.modal";
 import { InternalError } from "@hireverse/service-common/dist/app.errors";
@@ -12,6 +12,61 @@ import { JobSearchDTO } from "./dto/job.dto";
 export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepository {
     constructor() {
         super(Job)
+    }
+
+    async countJobs(filter?: RootFilterQuery<IJob>): Promise<number> {
+        try {
+            return await this.repository.countDocuments(filter);
+        } catch (error) {
+            throw new InternalError("Failed to perform count operation");
+        }
+    }
+
+    async getJobPostTrend(companyId: string, year: number): Promise<Array<{ month: string; count: number }>> {
+        try {
+            const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
+            const endDate = new Date(`${year + 1}-01-01T00:00:00.000Z`);
+
+            const pipeline:PipelineStage[] = [
+                {
+                    $match: {
+                        userId: companyId,
+                        createdAt: { $gte: startDate, $lt: endDate },
+                    },
+                },
+                {
+                    $group: {
+                        _id: { month: { $month: "$createdAt" } },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { "_id.month": 1 } },
+                {
+                    $project: {
+                        _id: 0,
+                        month: {
+                            $arrayElemAt: [
+                                ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                                { $subtract: ["$_id.month", 1] },
+                            ],
+                        },
+                        count: 1,
+                    },
+                },
+            ];
+
+            const trend = await this.repository.aggregate(pipeline);
+
+            const allMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const completeTrend = allMonths.map(month => {
+                const data = trend.find((entry: { month: string; count: number }) => entry.month === month);
+                return { month, count: data ? data.count : 0 };
+            });
+
+            return completeTrend;
+        } catch (error) {
+            throw new InternalError("Failed to get job post trend");
+        }
     }
 
     async populatedFind(filter: FilterQuery<IJob>,
@@ -327,7 +382,7 @@ export class JobRepository extends MongoBaseRepository<IJob> implements IJobRepo
                                     $expr: {
                                         $and: [
                                             { $lte: [{ $arrayElemAt: ["$salaryRange", 0] }, salaryRange.max] },
-                                            { $gte: [{ $arrayElemAt: ["$salaryRange", 1] }, salaryRange.min] }, 
+                                            { $gte: [{ $arrayElemAt: ["$salaryRange", 1] }, salaryRange.min] },
                                         ],
                                     },
                                 },

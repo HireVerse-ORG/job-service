@@ -170,6 +170,14 @@ export class JobService implements IJobService {
             updatedAt: job.updatedAt,
         };
     }
+
+    async getMyjobsCount(userId: string): Promise<number>{
+        return await this.jobRepo.countJobs({userId});
+    }
+
+    async getMyjobPostTrend(userId: string, year: number): Promise<Array<{ month: string; count: number }>>{
+        return await this.jobRepo.getJobPostTrend(userId, year);
+    }
     
 
     private capitalizeName(name: string): string {

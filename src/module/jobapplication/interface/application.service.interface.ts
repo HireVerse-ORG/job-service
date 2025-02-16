@@ -14,4 +14,11 @@ export interface IJobApplicationService {
     ): Promise<JobApplicationListDTO>;
     declineApplicantsOfJob(jobId: string, reason?: string): Promise<boolean>;
     addComment(id: string, comment: string): Promise<JobApplicationDTO>;
+
+    // statistics
+    getCompaniesApplicationsCount(companyId: string): Promise<number>;
+    getCompaniesApplicationsTrend(companyId: string, year: number): Promise<Array<{ month: string; count: number }>>
+    getUserApplicationsCount(userId: string): Promise<number>
+    getUserApplicationsTrend(userId: string, year: number): Promise<Array<{ month: string; count: number }>>
+    getUserApplicationsStatusData(userId: string): Promise<Array<{ status: string; count: number }>>
 } 

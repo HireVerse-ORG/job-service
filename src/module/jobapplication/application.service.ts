@@ -200,8 +200,27 @@ export class JobApplicationService implements IJobApplicationService {
 
         return this.toDTO(updated);
     }
-    
 
+    async getCompaniesApplicationsCount(companyId: string): Promise<number>{
+        return await this.jobApplicationRepo.countJobApplications({companyProfileId: companyId});
+    }
+
+    async getCompaniesApplicationsTrend(companyId: string, year: number): Promise<Array<{ month: string; count: number }>>{
+        return await this.jobApplicationRepo.getApplicationTrend(companyId, year);
+    }
+
+    async getUserApplicationsCount(userId: string): Promise<number>{
+        return await this.jobApplicationRepo.countJobApplications({userId});
+    }
+
+    async getUserApplicationsTrend(userId: string, year: number): Promise<Array<{ month: string; count: number }>>{
+        return await this.jobApplicationRepo.getMyApplicationTrend(userId, year);
+    }
+    
+    async getUserApplicationsStatusData(userId: string): Promise<Array<{ status: string; count: number }>>{
+        return await this.jobApplicationRepo.getApplicationStatusChartData(userId);
+    }
+    
     private toDTO(application: IJobApplication): JobApplicationDTO {
         return {
             id: application.id,

@@ -12,4 +12,6 @@ export interface IJobService {
     getJobById(id: string, status?: JobStatus): Promise<PopulatedJobDTO>;
     listJobs(page: number, limit: number, filter: {userId?: string; companyProfileId?: string; id?: string;}, query?:string): Promise<PopulatedJobListDTO>;
     listJobsCategoryByKeyword(keyword: string): Promise<string[]>;
+    getMyjobsCount(userId: string): Promise<number>;
+    getMyjobPostTrend(userId: string, year: number): Promise<Array<{ month: string; count: number }>>
 } 

@@ -138,6 +138,14 @@ export class InterviewService implements IInterviewService {
         return result.modifiedCount > 0;
     }
 
+    async countUpcomingInterviews(userId: string): Promise<number> {
+        const now = new Date();
+        return await this.interviewRepo.countInterviews({
+            applicantId: userId,
+            scheduledTime: { $gte: now},
+        })
+    }
+
     private toDTO(interview: IInterview): InterviewDTO {
         return {
             id: interview.id,

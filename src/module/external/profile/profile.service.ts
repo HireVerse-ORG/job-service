@@ -48,6 +48,19 @@ export class ProfileService implements IProfileService {
                 return resolve({ status: 200, message: "Profiles Feteched", response });
             })
         })
+    }
 
+    async getCompanyProfileByUserId(userId: string) :Promise<RPCServiceResponseDto> {
+        return new Promise((resolve, reject) => {
+            companyProfileClient.GetCompanyProfileByUserId({ userId }, (error: any | null, response: any) => {
+                if (error) {
+                    const status = mapGrpcErrorToHttpStatus(error);
+                    const message = error.details;
+                    return reject({ status, message, response });
+                }
+    
+                return resolve({ status: 200, message: "Profiles Feteched", response });
+            })
+        })
     }
 }
