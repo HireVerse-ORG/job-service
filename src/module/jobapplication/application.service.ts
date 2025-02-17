@@ -20,7 +20,7 @@ export class JobApplicationService implements IJobApplicationService {
             jobId: data.jobId,
             status: { $nin: [JobApplicationStatus.WITHDRAWN] },
         });
-    
+
         if (existingJob) {
             throw new BadRequestError("You have already applied for this job.");
         }
@@ -31,13 +31,13 @@ export class JobApplicationService implements IJobApplicationService {
     }
 
     async updateJobApplication(id: string, data: UpdateJobAppplicationDTO): Promise<JobApplicationDTO> {
-        if(!isValidObjectId(id)){
+        if (!isValidObjectId(id)) {
             throw new BadRequestError("Invalid id");
         }
 
         const updated = await this.jobApplicationRepo.update(id, data);
 
-        if(!updated){
+        if (!updated) {
             throw new BadRequestError("Failed to update job application");
         }
 
@@ -50,11 +50,11 @@ export class JobApplicationService implements IJobApplicationService {
     }
 
     async changeJobApplicationStatus(id: string, status: JobApplicationStatus, reason?: string | null): Promise<JobApplicationDTO> {
-        const data: Partial<IJobApplication> = {status};
-        if(reason && status === JobApplicationStatus.FAILED){
+        const data: Partial<IJobApplication> = { status };
+        if (reason && status === JobApplicationStatus.FAILED) {
             data.failedReason = reason;
         }
-        if(reason && status === JobApplicationStatus.DECLINED){
+        if (reason && status === JobApplicationStatus.DECLINED) {
             data.declinedReason = reason;
         }
         const updatedJobApplication = await this.jobApplicationRepo.update(id, data);
@@ -69,26 +69,26 @@ export class JobApplicationService implements IJobApplicationService {
         if (!isValidObjectId(id)) {
             throw new BadRequestError("Invalid job application ID");
         }
-    
+
         const application = await this.jobApplicationRepo.findById(id);
         if (!application) {
             throw new NotFoundError("Job application not found");
         }
-    
+
         if (application.status !== JobApplicationStatus.FAILED) {
             throw new BadRequestError("Job application cannot be retried unless it is in 'failed' status.");
         }
-    
+
         const updated = await this.jobApplicationRepo.update(application.id, { status: JobApplicationStatus.PENDING });
         if (!updated) {
             throw new Error("Failed to update job application status.");
         }
-    
+
         await this.eventService.jobAppliedEvent({
             job_application_id: application.id,
             user_id: application.userId,
         });
-    
+
         return true;
     }
 
@@ -96,13 +96,13 @@ export class JobApplicationService implements IJobApplicationService {
         if (!isValidObjectId(id)) {
             throw new BadRequestError("Invalid job application ID");
         }
-    
+
         const application = await this.jobApplicationRepo.findById(id);
         if (!application) {
             throw new NotFoundError("Job application not found");
         }
-    
-        if([JobApplicationStatus.HIRED, JobApplicationStatus.WITHDRAWN].includes(application.status)){
+
+        if ([JobApplicationStatus.HIRED, JobApplicationStatus.WITHDRAWN].includes(application.status)) {
             throw new BadRequestError(`Cannot withdraw application that is ${application.status}`);
         }
 
@@ -117,8 +117,8 @@ export class JobApplicationService implements IJobApplicationService {
     async declineApplicantsOfJob(jobId: string, reason?: string): Promise<boolean> {
         const excludeStatus = [JobApplicationStatus.HIRED, JobApplicationStatus.WITHDRAWN, JobApplicationStatus.FAILED];
         const updated = await this.jobApplicationRepo.updateMany(
-            { jobId, status: { $nin: excludeStatus } }, 
-            { $set: { status: JobApplicationStatus.DECLINED, declinedReason: reason || null } } 
+            { jobId, status: { $nin: excludeStatus } },
+            { $set: { status: JobApplicationStatus.DECLINED, declinedReason: reason || null } }
         );
         return updated
     }
@@ -132,15 +132,15 @@ export class JobApplicationService implements IJobApplicationService {
             filterQuery.jobRole = { $regex: sanitizedQuery, $options: "i" };
         }
 
-        if(status) {
+        if (status) {
             filterQuery.status = status;
         }
 
-        if(!status) {
-            filterQuery.status = {$ne: JobApplicationStatus.WITHDRAWN};
+        if (!status) {
+            filterQuery.status = { $ne: JobApplicationStatus.WITHDRAWN };
         }
 
-        const appplications = await this.jobApplicationRepo.paginate({ ...filterQuery }, page, limit, {sort: {createdAt : -1}});
+        const appplications = await this.jobApplicationRepo.paginate({ ...filterQuery }, page, limit, { sort: { createdAt: -1 } });
         return { ...appplications, data: appplications.data.map(this.toDTO) };
     }
 
@@ -148,9 +148,9 @@ export class JobApplicationService implements IJobApplicationService {
         filter: { jobId?: string; companyProfileId?: string } & JobListFilters
     ): Promise<JobApplicationListDTO> {
         const { jobId, companyProfileId, page, limit, query, status } = filter;
-    
+
         const excludeStatus = [JobApplicationStatus.WITHDRAWN, JobApplicationStatus.PENDING, JobApplicationStatus.FAILED];
-    
+
         const filterQuery: FilterQuery<IJobApplication> = {};
         if (jobId) {
             filterQuery.jobId = jobId;
@@ -158,7 +158,7 @@ export class JobApplicationService implements IJobApplicationService {
         if (companyProfileId) {
             filterQuery.companyProfileId = companyProfileId;
         }
-    
+
         if (query) {
             const sanitizedQuery = querySanitizer(query.trim());
             filterQuery.$or = [
@@ -166,13 +166,13 @@ export class JobApplicationService implements IJobApplicationService {
                 { email: { $regex: sanitizedQuery, $options: "i" } },
             ];
         }
-    
+
         if (status && !excludeStatus.includes(status)) {
             filterQuery.status = status;
         } else if (!status) {
             filterQuery.status = { $nin: excludeStatus };
         }
-    
+
         const applications = await this.jobApplicationRepo.paginate(
             { ...filterQuery },
             page,
@@ -186,13 +186,13 @@ export class JobApplicationService implements IJobApplicationService {
         if (!isValidObjectId(id)) {
             throw new BadRequestError("Invalid job application ID");
         }
-    
+
         const application = await this.jobApplicationRepo.findById(id);
         if (!application) {
             throw new NotFoundError("Job application not found");
         }
 
-        const updated = await this.jobApplicationRepo.update(id, {comment: {text: comment, date: new Date()}});
+        const updated = await this.jobApplicationRepo.update(id, { comment: { text: comment, date: new Date() } });
 
         if (!updated) {
             throw new Error("Failed to add comment.");
@@ -201,27 +201,38 @@ export class JobApplicationService implements IJobApplicationService {
         return this.toDTO(updated);
     }
 
-    async getCompaniesApplicationsCount(companyId: string): Promise<number>{
+    async getCompaniesApplicationsCount(companyId: string): Promise<number> {
         const excludeStatus = [JobApplicationStatus.WITHDRAWN, JobApplicationStatus.PENDING, JobApplicationStatus.FAILED];
-        return await this.jobApplicationRepo.countJobApplications({companyProfileId: companyId, status: {$nin: excludeStatus}});
+        return await this.jobApplicationRepo.countJobApplications({ companyProfileId: companyId, status: { $nin: excludeStatus } });
     }
 
-    async getCompaniesApplicationsTrend(companyId: string, year: number): Promise<Array<{ month: string; count: number }>>{
+    async getCompaniesApplicationsTrend(companyId: string, year: number): Promise<Array<{ month: string; count: number }>> {
         return await this.jobApplicationRepo.getApplicationTrend(companyId, year);
     }
 
-    async getUserApplicationsCount(userId: string): Promise<number>{
-        return await this.jobApplicationRepo.countJobApplications({userId});
+    async getUserApplicationsCount(userId: string): Promise<number> {
+        return await this.jobApplicationRepo.countJobApplications({ userId });
     }
 
-    async getUserApplicationsTrend(userId: string, year: number): Promise<Array<{ month: string; count: number }>>{
+    async getUserApplicationsTrend(userId: string, year: number): Promise<Array<{ month: string; count: number }>> {
         return await this.jobApplicationRepo.getMyApplicationTrend(userId, year);
     }
-    
-    async getUserApplicationsStatusData(userId: string): Promise<Array<{ status: string; count: number }>>{
+
+    async getUserApplicationsStatusData(userId: string): Promise<Array<{ status: string; count: number }>> {
         return await this.jobApplicationRepo.getApplicationStatusChartData(userId);
     }
-    
+
+    async getAppliedJobIdsOfApplicant(applicantId: string): Promise<Set<string>> {
+        const jobIdDocs = await this.jobApplicationRepo.findAll(
+            { userId: applicantId, status: { $nin: JobApplicationStatus.WITHDRAWN } },
+            { projection: { jobId: 1, _id: 0 } }
+        );
+
+        const jobIds = jobIdDocs.map((doc: { jobId: string }) => doc.jobId);
+        const uniqueJobIds = new Set(jobIds);
+        return uniqueJobIds;
+    }
+
     private toDTO(application: IJobApplication): JobApplicationDTO {
         return {
             id: application.id,

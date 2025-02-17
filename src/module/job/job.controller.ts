@@ -33,56 +33,56 @@ export class JobController {
     return res.json(job);
   });
 
-/**
- * @route GET /api/jobs/:id
- * @scope Public
- **/
-public getJob = asyncWrapper(async (req: AuthRequest, res: Response) => {
-  const id = req.params.id;
-  const job = await this.jobService.getJobById(id, JobStatus.LIVE);
+  /**
+   * @route GET /api/jobs/:id
+   * @scope Public
+   **/
+  public getJob = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+    const job = await this.jobService.getJobById(id, JobStatus.LIVE);
 
-  const jobWithProfile: typeof job & {
-    companyProfile: {
-      id: string;
-      name: string;
-      companyId: string;
-      location: { city: string; country: string };
-      image: string;
-    } | null;
-  } = {
-    ...job,
-    companyProfile: null,
-  };
+    const jobWithProfile: typeof job & {
+      companyProfile: {
+        id: string;
+        name: string;
+        companyId: string;
+        location: { city: string; country: string };
+        image: string;
+      } | null;
+    } = {
+      ...job,
+      companyProfile: null,
+    };
 
-  try {
-    const { response } = await this.profileService.getCompanyProfilesByidList([job.companyProfileId]);
-    const profile = response?.profiles[0] || null;
+    try {
+      const { response } = await this.profileService.getCompanyProfilesByidList([job.companyProfileId]);
+      const profile = response?.profiles[0] || null;
 
-    if (profile) {
-      jobWithProfile.companyProfile = {
-        id: profile.id,
-        name: profile.name,
-        companyId: profile.companyId,
-        location: profile.location,
-        image: profile.image,
-      };
+      if (profile) {
+        jobWithProfile.companyProfile = {
+          id: profile.id,
+          name: profile.name,
+          companyId: profile.companyId,
+          location: profile.location,
+          image: profile.image,
+        };
+      }
+    } catch (profileError) {
+      jobWithProfile.companyProfile = null;
     }
-  } catch (profileError) {
-    jobWithProfile.companyProfile = null; 
-  }
 
-  return res.status(200).json(jobWithProfile);
-});
+    return res.status(200).json(jobWithProfile);
+  });
 
-/**
- * @route GET /api/jobs/company/:id
- * @scope Company
- **/
-public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) => {
-  const id = req.params.id;
-  const job = await this.jobService.getJobById(id);
-  return res.status(200).json(job);
-});
+  /**
+   * @route GET /api/jobs/company/:id
+   * @scope Company
+   **/
+  public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+    const job = await this.jobService.getJobById(id);
+    return res.status(200).json(job);
+  });
 
 
   /**
@@ -160,6 +160,13 @@ public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) =
     }
 
     let companies = [];
+    let appliedJobIds: Set<string> = new Set();
+
+    const applicantId = req.payload?.userId!;
+    if (applicantId && req.payload?.role === "seeker") {
+      appliedJobIds = await this.applicantService.getAppliedJobIdsOfApplicant(applicantId);
+    }
+  
 
     if (!location && !country && !city) {
       const jobs = await this.jobService.getPaginatedActiveJobs(filter);
@@ -170,7 +177,7 @@ public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) =
       } catch (error) {
         companies = [];
       }
-      const jobsWithProfiles = this.mapJobsWithProfiles(jobs.data, companies);
+      const jobsWithProfiles = this.mapJobsWithProfiles(jobs.data, companies, appliedJobIds);
       return res.json({
         ...jobs,
         data: jobsWithProfiles,
@@ -185,7 +192,7 @@ public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) =
         filter.companyIds = companies.map((company: { id: string }) => company.id);
         const jobs = await this.jobService.getPaginatedActiveJobs(filter);
 
-        const jobsWithProfiles = this.mapJobsWithProfiles(jobs.data, companies);
+        const jobsWithProfiles = this.mapJobsWithProfiles(jobs.data, companies, appliedJobIds);
 
         return res.json({
           ...jobs,
@@ -198,9 +205,10 @@ public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) =
     }
   });
 
-  private mapJobsWithProfiles(jobs: PopulatedJobDTO[], companies: any[]) {
+  private mapJobsWithProfiles(jobs: PopulatedJobDTO[], companies: any[], appliedJobIds: Set<string>) {
     return jobs.map((job) => {
       const profile = companies.find((company) => company.id === job.companyProfileId);
+      
       return {
         ...job,
         companyProfile: profile
@@ -212,6 +220,7 @@ public getJobForCompany = asyncWrapper(async (req: AuthRequest, res: Response) =
             image: profile.image,
           }
           : null,
+          applied: appliedJobIds.has(job.id.toString()),
       };
     });
   }
