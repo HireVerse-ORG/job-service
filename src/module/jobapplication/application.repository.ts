@@ -37,12 +37,14 @@ export class JobApplicationRepository extends MongoBaseRepository<IJobApplicatio
         try {
             const startDate = new Date(`${year}-01-01T00:00:00Z`);
             const endDate = new Date(`${year + 1}-01-01T00:00:00Z`);
+            const excludeStatus = [JobApplicationStatus.WITHDRAWN, JobApplicationStatus.PENDING, JobApplicationStatus.FAILED];
 
             const pipeline: PipelineStage[] = [
                 {
                     $match: {
                         companyProfileId: companyId,
-                        createdAt: { $gte: startDate, $lt: endDate }
+                        createdAt: { $gte: startDate, $lt: endDate },
+                        status: {$nin: excludeStatus},
                     }
                 },
                 {

@@ -202,7 +202,8 @@ export class JobApplicationService implements IJobApplicationService {
     }
 
     async getCompaniesApplicationsCount(companyId: string): Promise<number>{
-        return await this.jobApplicationRepo.countJobApplications({companyProfileId: companyId});
+        const excludeStatus = [JobApplicationStatus.WITHDRAWN, JobApplicationStatus.PENDING, JobApplicationStatus.FAILED];
+        return await this.jobApplicationRepo.countJobApplications({companyProfileId: companyId, status: {$nin: excludeStatus}});
     }
 
     async getCompaniesApplicationsTrend(companyId: string, year: number): Promise<Array<{ month: string; count: number }>>{
