@@ -1,0 +1,13 @@
+apiVersion: skaffold/v4beta12
+kind: Config
+metadata:
+  name: job-service
+build:
+  artifacts:
+    - image: hireverse/job-server
+      docker:
+        dockerfile: Dockerfile
+        target: production
+manifests:
+  rawYaml:
+    - k8s/*

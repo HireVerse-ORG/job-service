@@ -36,7 +36,6 @@ class Server {
                 logger.info("Job Server shut down gracefully.");
             });
 
-            process.exit(0);
         } catch (error) {
             logger.error("Error during shutdown:", error);
             process.exit(1);

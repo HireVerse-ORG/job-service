@@ -30,7 +30,6 @@ class Server {
             if (err) {
                 logger.error('Error during shutdown:', err);
             }
-            process.exit(0);
         });
     }
 }

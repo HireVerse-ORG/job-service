@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js",
+    "build": "tsc",
     "dev": "nodemon src/server.ts"
   },
   "keywords": [],
@@ -12,7 +13,7 @@
   "description": "",
   "dependencies": {
     "@grpc/grpc-js": "^1.12.5",
-    "@hireverse/kafka-communication": "^1.0.1",
+    "@hireverse/kafka-communication": "^1.0.2",
     "@hireverse/service-common": "^1.0.8",
     "@hireverse/service-protos": "^1.0.4",
     "cloudinary": "^1.41.3",

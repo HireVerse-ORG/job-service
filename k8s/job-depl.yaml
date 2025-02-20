@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-depl
+  namespace: hireverse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job
+  template:
+    metadata:
+      labels:
+        app: job
+    spec:
+      containers:
+        - name: job
+          image: hireverse/job-server
+          env:
+            - name: CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: job-secret
+                  key: CLOUDINARY_CLOUD_NAME
+            - name: CLOUDINARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: job-secret
+                  key: CLOUDINARY_API_KEY
+            - name: CLOUDINARY_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: job-secret
+                  key: CLOUDINARY_API_SECRET
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: job-secret
+                  key: DATABASE_URL
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret
+                  key: JWT_SECRET_KEY
+          envFrom:
+            - configMapRef:
+                name: common-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: job-srv
+  namespace: hireverse
+spec:
+  selector:
+    app: job
+  ports:
+    - name: express
+      protocol: TCP
+      port: 5003
+      targetPort: 5003
+    - name: grpc
+      protocol: TCP
+      port: 6003
+      targetPort: 6003
