@@ -7,7 +7,7 @@ build:
     - image: hireverse/job-server
       docker:
         dockerfile: Dockerfile
-        target: production
+        target: development
 manifests:
   rawYaml:
     - k8s/*
